@@ -17,7 +17,8 @@ from mcp.client.stdio import stdio_client
 
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-PYTHON_BIN = str(REPO_ROOT / "knowledge-brain" / ".venv" / "bin" / "python")
+_candidate_venv = REPO_ROOT / "knowledge-brain" / ".venv" / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
+PYTHON_BIN = str(_candidate_venv) if _candidate_venv.exists() else sys.executable
 MCP_SCRIPT = str(REPO_ROOT / "mcp_server.py")
 
 
@@ -45,6 +46,19 @@ def _decode_tool_result(res: Any) -> Any:
 
 async def _call(session: ClientSession, name: str, args: Dict[str, Any]) -> Any:
     return _decode_tool_result(await session.call_tool(name, args))
+
+
+def _byte_grep(folder: Path, target: str) -> List[str]:
+    matches: List[str] = []
+    target_bytes = target.encode("utf-8")
+    for f in folder.rglob("*"):
+        if f.is_file():
+            try:
+                if target_bytes in f.read_bytes():
+                    matches.append(str(f))
+            except Exception:
+                pass
+    return matches
 
 
 def test_all_6_scenarios_via_live_mcp_tool_calls(tmp_path: Path) -> None:
@@ -212,15 +226,9 @@ def test_all_6_scenarios_via_live_mcp_tool_calls(tmp_path: Path) -> None:
                     },
                 )
 
-                # Confirm secret exists on disk BEFORE forget using grep
-                grep_before = subprocess.run(
-                    ["grep", "-rnIa", secret, str(mem_root / ns42)],
-                    capture_output=True,
-                    text=True,
-                    errors="replace",
-                )
-                assert grep_before.returncode == 0
-                assert len(grep_before.stdout.strip().splitlines()) >= 1
+                # Confirm secret exists on disk BEFORE forget using byte scan
+                matches_before = _byte_grep(mem_root / ns42, secret)
+                assert len(matches_before) >= 1
 
                 t5_forget = await _call(
                     session,
@@ -233,15 +241,9 @@ def test_all_6_scenarios_via_live_mcp_tool_calls(tmp_path: Path) -> None:
                 assert t5_forget["filesystem_byte_matches"] == 0
                 assert t5_forget["probe_abstentions"] == "VERIFIED_ABSTAINED_10_PROBES"
 
-                # Confirm 0 bytes remain on disk AFTER forget using grep
-                grep_after = subprocess.run(
-                    ["grep", "-rnIa", secret, str(mem_root / ns42)],
-                    capture_output=True,
-                    text=True,
-                    errors="replace",
-                )
-                assert grep_after.returncode == 1
-                assert grep_after.stdout == ""
+                # Confirm 0 bytes remain on disk AFTER forget using byte scan
+                matches_after = _byte_grep(mem_root / ns42, secret)
+                assert len(matches_after) == 0
 
                 t5_verify = await _call(
                     session,
@@ -283,7 +285,7 @@ def test_all_6_scenarios_via_live_mcp_tool_calls(tmp_path: Path) -> None:
                     "t3_rec": t3_rec,
                     "t3_q": t3_q,
                     "t4_rec": t4_rec,
-                    "grep_before_lines": grep_before.stdout.strip().splitlines(),
+                    "grep_before_lines": matches_before,
                     "t5_forget": t5_forget,
                     "t5_verify": t5_verify,
                     "t6_create": t6_create,

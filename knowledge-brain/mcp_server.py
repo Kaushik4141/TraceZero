@@ -9,18 +9,16 @@ if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
 
 from server.mcp_server import (
-    api,
-    explain,
-    forget,
-    handoff_create,
-    handoff_get,
-    history,
+    create_mcp_server,
     mcp,
-    quarantine_list,
-    recall,
-    remember,
-    verify_deletion,
+    main,
 )
+
+__all__ = [
+    "create_mcp_server",
+    "mcp",
+    "main",
+]
 
 if __name__ == "__main__":
     if hasattr(mcp, "run"):
