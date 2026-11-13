@@ -65,33 +65,9 @@
       <!-- Logo & Title -->
       <div class="flex items-center space-x-3">
         <div class="w-9 h-9 rounded-xl bg-white text-black flex items-center justify-center font-bold text-lg shadow-[0_0_20px_rgba(255,255,255,0.25)]">
-          ✦
+          <i data-lucide="sparkles" class="w-5 h-5 text-black"></i>
         </div>
-        <div>
-          <div class="flex items-center space-x-2">
-            <span class="font-bold text-white text-base tracking-tight">Knowledge Brain</span>
-            <span class="text-xs px-2 py-0.5 rounded-full bg-neutral-900 border border-neutral-700 text-neutral-300 font-mono">OKF v0.2</span>
-          </div>
-          <p class="text-xs text-neutral-400">Live Audit & Provenance Verification Engine</p>
-        </div>
-      </div>
-
-      <!-- Live Namespace Picker & Server Status -->
-      <div class="flex items-center space-x-4">
-        <div class="flex items-center space-x-2 bg-brand-surface border border-brand-border px-3 py-1.5 rounded-xl text-xs">
-          <span class="text-neutral-400">Namespace:</span>
-          <select class="bg-transparent text-white font-mono focus:outline-none cursor-pointer"
-                  x-model="selectedNamespace" @change="loadNamespaceData()">
-            <template x-for="ns in namespaces" :key="ns.namespace">
-              <option :value="ns.namespace" class="bg-neutral-900 text-white" x-text="ns.name + ' (' + ns.namespace + ')'"></option>
-            </template>
-          </select>
-        </div>
-
-        <div class="flex items-center space-x-2 text-xs text-emerald-400 bg-emerald-950/40 border border-emerald-500/20 px-3 py-1.5 rounded-xl">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span>Port 8080 Active</span>
-        </div>
+        <span class="font-bold text-white text-base tracking-tight">Knowledge Brain</span>
       </div>
     </div>
 
@@ -99,37 +75,32 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-1 border-t border-brand-border/30 overflow-x-auto">
       <button @click="activeTab = 'tab1'"
               :class="activeTab === 'tab1' ? 'text-white border-white' : 'text-neutral-400 border-transparent hover:text-neutral-200'"
-              class="py-3 px-4 text-xs font-medium border-b-2 transition flex items-center space-x-2 whitespace-nowrap">
-        <i data-lucide="layers" class="w-4 h-4"></i>
+              class="py-3 px-4 text-xs font-medium border-b-2 transition flex items-center whitespace-nowrap">
         <span>1. OpenViking 3-Tier Explorer</span>
       </button>
 
       <button @click="activeTab = 'tab2'"
               :class="activeTab === 'tab2' ? 'text-white border-white' : 'text-neutral-400 border-transparent hover:text-neutral-200'"
-              class="py-3 px-4 text-xs font-medium border-b-2 transition flex items-center space-x-2 whitespace-nowrap">
-        <i data-lucide="clock" class="w-4 h-4"></i>
+              class="py-3 px-4 text-xs font-medium border-b-2 transition flex items-center whitespace-nowrap">
         <span>2. Temporal Claims & Budget Packer</span>
       </button>
 
       <button @click="activeTab = 'tab3'"
               :class="activeTab === 'tab3' ? 'text-white border-white' : 'text-neutral-400 border-transparent hover:text-neutral-200'"
-              class="py-3 px-4 text-xs font-medium border-b-2 transition flex items-center space-x-2 whitespace-nowrap">
-        <i data-lucide="shield-alert" class="w-4 h-4"></i>
+              class="py-3 px-4 text-xs font-medium border-b-2 transition flex items-center whitespace-nowrap">
         <span>3. Quarantine Box</span>
-        <span x-show="quarantinedCount > 0" class="ml-1 px-1.5 py-0.2 rounded-full bg-rose-950 border border-rose-500/30 text-rose-300 text-[10px]" x-text="quarantinedCount"></span>
+        <span x-show="quarantinedCount > 0" class="ml-1.5 px-1.5 py-0.2 rounded-full bg-rose-950 border border-rose-500/30 text-rose-300 text-[10px]" x-text="quarantinedCount"></span>
       </button>
 
       <button @click="activeTab = 'tab4'"
               :class="activeTab === 'tab4' ? 'text-white border-white' : 'text-neutral-400 border-transparent hover:text-neutral-200'"
-              class="py-3 px-4 text-xs font-medium border-b-2 transition flex items-center space-x-2 whitespace-nowrap">
-        <i data-lucide="binary" class="w-4 h-4"></i>
+              class="py-3 px-4 text-xs font-medium border-b-2 transition flex items-center whitespace-nowrap">
         <span>4. Verifiable Deletion & Byte Scanner</span>
       </button>
 
       <button @click="activeTab = 'tab5'"
               :class="activeTab === 'tab5' ? 'text-white border-white' : 'text-neutral-400 border-transparent hover:text-neutral-200'"
-              class="py-3 px-4 text-xs font-medium border-b-2 transition flex items-center space-x-2 whitespace-nowrap">
-        <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
+              class="py-3 px-4 text-xs font-medium border-b-2 transition flex items-center whitespace-nowrap">
         <span>5. Storage Benchmarks & Token Savings</span>
       </button>
     </div>
