@@ -86,10 +86,10 @@
       </button>
 
       <button @click="activeTab = 'tab3'"
-              :class="activeTab === 'tab3' ? 'text-white border-white' : 'text-neutral-400 border-transparent hover:text-neutral-200'"
-              class="py-3 px-4 text-xs font-medium border-b-2 transition flex items-center whitespace-nowrap">
+              :class="activeTab === 'tab3' ? 'text-white border-white' : 'text-neutral-400 border-transparent hover:text-rose-300 hover:border-rose-500/60'"
+              class="py-3 px-4 text-xs font-medium border-b-2 transition flex items-center whitespace-nowrap group">
         <span>3. Quarantine Box</span>
-        <span x-show="quarantinedCount > 0" class="ml-1.5 px-1.5 py-0.2 rounded-full bg-rose-950 border border-rose-500/30 text-rose-300 text-[10px]" x-text="quarantinedCount"></span>
+        <span x-show="quarantinedCount > 0" class="ml-1.5 px-1.5 py-0.2 rounded-full bg-rose-600/20 border border-rose-500/40 text-rose-400 text-[10px] font-semibold" x-text="quarantinedCount"></span>
       </button>
 
       <button @click="activeTab = 'tab4'"
@@ -116,7 +116,7 @@
       <div class="flex items-center justify-between">
         <div>
           <h2 class="text-xl font-bold text-white tracking-tight">OpenViking Hierarchical Namespace Explorer</h2>
-          <p class="text-xs text-neutral-400">Cryptographically isolated micro-shards. Inspect the 3 context tiers with live byte-span provenance highlighting.</p>
+          <p class="text-xs text-neutral-400 font-normal whitespace-nowrap">Each employee gets a private memory. The AI only sees what's in its own tier, and every claim traces back to its source.</p>
         </div>
         <div class="flex items-center space-x-3">
           <span class="text-xs px-3 py-1 rounded-full bg-emerald-950/60 border border-emerald-500/30 text-emerald-400 font-mono">
@@ -149,6 +149,48 @@
 
         <!-- Right: 3 Context Tiers (Col 9) -->
         <div class="col-span-12 lg:col-span-9 space-y-6">
+          <!-- Tier Flow Indicator -->
+          <div class="hidden min-[900px]:flex items-center justify-between px-5 py-2.5 rounded-xl bg-brand-surface/70 border border-brand-border/60">
+            <!-- Step 1: L2 Raw Sources -->
+            <div class="flex items-center space-x-2.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-500 flex-shrink-0"></span>
+              <div>
+                <div class="text-xs font-semibold text-neutral-200">L2 Raw Sources</div>
+                <div class="text-[10px] text-neutral-400">source of truth</div>
+              </div>
+            </div>
+
+            <!-- Arrow L2 -> L1 -->
+            <div class="flex items-center space-x-1 text-amber-500/70">
+              <span class="h-[1px] w-8 bg-gradient-to-r from-amber-500/50 to-emerald-500/50"></span>
+              <span class="text-emerald-400 text-xs">→</span>
+            </div>
+
+            <!-- Step 2: L1 Profiles -->
+            <div class="flex items-center space-x-2.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0"></span>
+              <div>
+                <div class="text-xs font-semibold text-neutral-200">L1 Profiles</div>
+                <div class="text-[10px] text-neutral-400">structured claims</div>
+              </div>
+            </div>
+
+            <!-- Arrow L1 -> L0 -->
+            <div class="flex items-center space-x-1 text-emerald-500/70">
+              <span class="h-[1px] w-8 bg-gradient-to-r from-emerald-500/50 to-blue-500/50"></span>
+              <span class="text-blue-400 text-xs">→</span>
+            </div>
+
+            <!-- Step 3: L0 Abstract -->
+            <div class="flex items-center space-x-2.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-blue-500 flex-shrink-0"></span>
+              <div>
+                <div class="text-xs font-semibold text-neutral-200">L0 Abstract</div>
+                <div class="text-[10px] text-neutral-400">what the AI sees</div>
+              </div>
+            </div>
+          </div>
+
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <!-- Tier 1: L0 Abstract -->
             <div class="glass-panel rounded-2xl p-4 border border-brand-border flex flex-col h-[700px]">
@@ -211,7 +253,15 @@
                 <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-950/60 border border-amber-500/30 text-amber-300 font-mono"
                       x-text="'~' + getL2TotalTokens() + ' tokens'"></span>
               </div>
-              <p class="text-[11px] text-neutral-400 mt-2 mb-3">Immutable multi-turn session transcripts. Click claims to trigger byte slice highlighting.</p>
+              <p class="text-[11px] text-neutral-400 mt-2 mb-2">Immutable multi-turn session transcripts. Click claims to trigger byte slice highlighting.</p>
+
+              <!-- Quarantined Document Alert Callout -->
+              <div class="mb-3 p-2.5 rounded-lg bg-rose-950/30 border-l-2 border-rose-500 border-t border-r border-b border-rose-500/20 flex items-start space-x-2 text-[13px] text-neutral-300 font-sans">
+                <i data-lucide="shield-alert" class="w-4 h-4 text-rose-400 flex-shrink-0 mt-0.5"></i>
+                <span class="leading-snug">
+                  <code class="font-mono text-rose-300 text-xs bg-rose-950/60 px-1 py-0.5 rounded border border-rose-500/30">poisoned_doc_99.txt</code> was quarantined. It never reached the AI's context.
+                </span>
+              </div>
 
               <!-- Source Switcher -->
               <div class="flex space-x-2 mb-2 overflow-x-auto">
