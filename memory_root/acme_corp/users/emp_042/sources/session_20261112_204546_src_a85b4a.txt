@@ -1,2 +1,0 @@
-[2026-11-12T20:45:46Z] Origin: architect_session (trust_tier=3)
-All primary keys in payment tables must use uuidv7.

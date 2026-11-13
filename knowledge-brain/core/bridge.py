@@ -324,20 +324,37 @@ def remember(
     rel_source_path = f"sources/{filename}"
 
     cursor = conn.cursor()
-    cursor.execute(
-        "INSERT INTO sources_index VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        (
-            source_id,
-            rel_source_path,
-            sha256_hash,
-            origin,
-            trust_tier,
-            byte_start,
-            byte_end,
-            text.strip()[:150],
-            now_iso,
-        ),
-    )
+    src_cols = {r[1] for r in cursor.execute("PRAGMA table_info(sources_index)").fetchall()}
+    claim_cols = {r[1] for r in cursor.execute("PRAGMA table_info(claims_index)").fetchall()}
+    lin_cols = {r[1] for r in cursor.execute("PRAGMA table_info(lineage_index)").fetchall()}
+
+    if "quote" in src_cols:
+        cursor.execute(
+            "INSERT INTO sources_index VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                source_id,
+                rel_source_path,
+                sha256_hash,
+                origin,
+                trust_tier,
+                byte_start,
+                byte_end,
+                text.strip()[:150],
+                now_iso,
+            ),
+        )
+    else:
+        cursor.execute(
+            "INSERT INTO sources_index (source_id, file_path, sha256_hash, origin, trust_tier, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+            (
+                source_id,
+                rel_source_path,
+                sha256_hash,
+                origin,
+                trust_tier,
+                now_iso,
+            ),
+        )
 
     extracted_triples = _extract_claim_triples_with_spans(text, namespace)
     created_claims = []
@@ -370,11 +387,12 @@ def remember(
             )
             if higher_trust_conflict is not None:
                 per_claim_status = "disputed"
-                edge_id = f"edge_{uuid4().hex[:6]}"
-                cursor.execute(
-                    "INSERT INTO lineage_index VALUES (?, ?, ?, ?, ?)",
-                    (edge_id, higher_trust_conflict["claim_id"], claim_id, "disputes", now_iso),
-                )
+                if "parent_claim_id" in lin_cols:
+                    edge_id = f"edge_{uuid4().hex[:6]}"
+                    cursor.execute(
+                        "INSERT INTO lineage_index VALUES (?, ?, ?, ?, ?)",
+                        (edge_id, higher_trust_conflict["claim_id"], claim_id, "disputes", now_iso),
+                    )
             else:
                 for old_row in old_rows:
                     old_id = old_row["claim_id"]
@@ -382,30 +400,50 @@ def remember(
                         "UPDATE claims_index SET status = 'superseded', valid_to = ? WHERE claim_id = ?",
                         (today, old_id),
                     )
-                    edge_id = f"edge_{uuid4().hex[:6]}"
-                    cursor.execute(
-                        "INSERT INTO lineage_index VALUES (?, ?, ?, ?, ?)",
-                        (edge_id, old_id, claim_id, "superseded_by", now_iso),
-                    )
+                    if "parent_claim_id" in lin_cols:
+                        edge_id = f"edge_{uuid4().hex[:6]}"
+                        cursor.execute(
+                            "INSERT INTO lineage_index VALUES (?, ?, ?, ?, ?)",
+                            (edge_id, old_id, claim_id, "superseded_by", now_iso),
+                        )
 
-        cursor.execute(
-            "INSERT INTO claims_index VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (
-                claim_id,
-                namespace,
-                sub,
-                pred,
-                obj,
-                per_claim_status,
-                today,
-                None,
-                source_id,
-                c_byte_start,
-                c_byte_end,
-                "preferences.okf.md",
-                now_iso,
-            ),
-        )
+        if "created_at" in claim_cols:
+            cursor.execute(
+                "INSERT INTO claims_index VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    claim_id,
+                    namespace,
+                    sub,
+                    pred,
+                    obj,
+                    per_claim_status,
+                    today,
+                    None,
+                    source_id,
+                    c_byte_start,
+                    c_byte_end,
+                    "preferences.okf.md",
+                    now_iso,
+                ),
+            )
+        else:
+            cursor.execute(
+                "INSERT INTO claims_index (claim_id, namespace, subject, predicate, object_val, status, valid_from, valid_to, source_id, byte_start, byte_end, okf_file) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    claim_id,
+                    namespace,
+                    sub,
+                    pred,
+                    obj,
+                    per_claim_status,
+                    today,
+                    None,
+                    source_id,
+                    c_byte_start,
+                    c_byte_end,
+                    "preferences.okf.md",
+                ),
+            )
         created_claims.append({
             "claim_id": claim_id,
             "subject": sub,
@@ -441,7 +479,7 @@ def _refresh_preferences_okf(shard_dir: Path, namespace: str) -> None:
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
-    cursor.execute("SELECT * FROM claims_index WHERE namespace = ? ORDER BY created_at ASC", (namespace,))
+    cursor.execute("SELECT * FROM claims_index WHERE namespace = ? ORDER BY valid_from ASC, rowid ASC", (namespace,))
     claims = cursor.fetchall()
 
     cursor.execute("SELECT * FROM sources_index")
@@ -478,7 +516,8 @@ def _refresh_preferences_okf(shard_dir: Path, namespace: str) -> None:
         body_lines.append(f"- {c['predicate'].replace('_', ' ').capitalize()}: {c['object_val']}.[^{sid}]")
         if sid in sources:
             s = sources[sid]
-            citations[sid] = f"{s['file_path']} \"{s['quote']}\" (trust_tier={s['trust_tier']})"
+            q_str = s["quote"] if "quote" in s.keys() else c["object_val"]
+            citations[sid] = f"{s['file_path']} \"{q_str}\" (trust_tier={s['trust_tier']})"
 
     if not active_claims:
         body_lines.append("- (No active claims)")
@@ -490,7 +529,8 @@ def _refresh_preferences_okf(shard_dir: Path, namespace: str) -> None:
             body_lines.append(f"- {c['predicate'].replace('_', ' ').capitalize()} (Historical): {c['object_val']}.[^{sid}]")
             if sid in sources:
                 s = sources[sid]
-                citations[sid] = f"{s['file_path']} \"{s['quote']}\" (trust_tier={s['trust_tier']})"
+                q_str = s["quote"] if "quote" in s.keys() else c["object_val"]
+                citations[sid] = f"{s['file_path']} \"{q_str}\" (trust_tier={s['trust_tier']})"
 
     if disputed_claims:
         body_lines.extend(["", "## Disputed Claims"])
@@ -499,7 +539,8 @@ def _refresh_preferences_okf(shard_dir: Path, namespace: str) -> None:
             body_lines.append(f"- {c['predicate'].replace('_', ' ').capitalize()}: {c['object_val']}.[^{sid}]")
             if sid in sources:
                 s = sources[sid]
-                citations[sid] = f"{s['file_path']} \"{s['quote']}\" (trust_tier={s['trust_tier']})"
+                q_str = s["quote"] if "quote" in s.keys() else c["object_val"]
+                citations[sid] = f"{s['file_path']} \"{q_str}\" (trust_tier={s['trust_tier']})"
 
     # Quarantined detections are excluded from .okf.md to keep compiled memory injection-free.
 
@@ -551,7 +592,11 @@ def recall(
     cursor = conn.cursor()
 
     # Check suppression hashes to guarantee suppression compliance
-    cursor.execute("SELECT hmac_hash, target_value FROM suppression_hashes")
+    suppr_cols = {r[1] for r in cursor.execute("PRAGMA table_info(suppression_hashes)").fetchall()}
+    if "hmac_hash" in suppr_cols:
+        cursor.execute("SELECT hmac_hash, target_value FROM suppression_hashes")
+    else:
+        cursor.execute("SELECT fact_hmac AS hmac_hash, '[suppressed_target]' AS target_value FROM suppression_hashes")
     suppression_rows = cursor.fetchall()
     stored_hmacs = {row["hmac_hash"] for row in suppression_rows}
 
@@ -605,10 +650,17 @@ def recall(
             ).model_dump()
 
     # Search claims_index for active claims ordered newest-first
-    cursor.execute(
-        "SELECT *, rowid FROM claims_index WHERE namespace = ? AND status = 'active' ORDER BY valid_from DESC, created_at DESC, rowid DESC",
-        (namespace,),
-    )
+    claim_cols = {r[1] for r in cursor.execute("PRAGMA table_info(claims_index)").fetchall()}
+    if "created_at" in claim_cols:
+        cursor.execute(
+            "SELECT *, rowid FROM claims_index WHERE namespace = ? AND status = 'active' ORDER BY valid_from DESC, created_at DESC, rowid DESC",
+            (namespace,),
+        )
+    else:
+        cursor.execute(
+            "SELECT *, valid_from AS created_at, rowid FROM claims_index WHERE namespace = ? AND status = 'active' ORDER BY valid_from DESC, rowid DESC",
+            (namespace,),
+        )
     all_active = cursor.fetchall()
 
     stopwords = {
@@ -625,11 +677,44 @@ def recall(
         pred = c["predicate"].lower()
         obj = c["object_val"].lower()
         c_text = f"{sub} {pred} {obj}"
+        c_tokens = set(re.findall(r"[a-z0-9]+", c_text))
 
-        score = sum(1 for w in q_words if w in c_text)
-        if score > 0 or not q_words:
+        def _tok_match(a: str, b: str) -> bool:
+            if a == b:
+                return True
+            short, long_ = (a, b) if len(a) <= len(b) else (b, a)
+            if len(short) >= 4 and len(long_) - len(short) <= 2 and long_.startswith(short):
+                return True
+            if len(short) >= 5 and abs(len(a) - len(b)) <= 3 and a[:5] == b[:5]:
+                return True
+            return False
+
+        pred_tokens = pred.replace("_", " ").split()
+        score = sum(
+            1
+            for w in q_words
+            if w in c_tokens
+            or (len(w) >= 6 and w in c_text)
+            or any(_tok_match(w, ct) for ct in c_tokens | set(pred_tokens))
+        )
+        has_pred_hit = any(
+            any(_tok_match(w, pt) for pt in pred_tokens)
+            for w in q_words
+        )
+        if not q_words:
+            min_score = 0
+        elif pred in ("stated", "has_note") and len(q_words) >= 3:
+            min_score = max(2, (len(q_words) + 1) // 2)
+        elif len(q_words) >= 4:
+            min_score = max(2, (len(q_words) + 1) // 2)
+        elif not has_pred_hit and len(q_words) >= 3:
+            min_score = max(2, (len(q_words) + 1) // 2)
+        else:
+            min_score = 1
+
+        if score >= min_score:
             is_specific = 0 if pred in ("stated", "has_note") else 1
-            scored_claims.append((score, is_specific, c["valid_from"], c["created_at"], c["rowid"], c))
+            scored_claims.append((is_specific, score, c["valid_from"], c["created_at"], c["rowid"], c))
 
     scored_claims.sort(key=lambda item: (item[0], item[1], item[2], item[3], item[4]), reverse=True)
     matching_claims = [item[5] for item in scored_claims]
@@ -676,21 +761,35 @@ def recall(
     # Fetch L2 Source Quotes
     l2_quotes = []
     if needed_sources:
+        by_src_claim = {c.source_id: c for c in reversed(l1_claim_records)}
         placeholders = ",".join("?" for _ in needed_sources)
         cursor.execute(
             f"SELECT * FROM sources_index WHERE source_id IN ({placeholders})",
             list(needed_sources),
         )
         for s in cursor.fetchall():
+            s_keys = set(s.keys())
+            c_ref = by_src_claim.get(s["source_id"])
+            b_start = s["byte_start"] if "byte_start" in s_keys else (c_ref.byte_start if c_ref else 0)
+            b_end = s["byte_end"] if "byte_end" in s_keys else (c_ref.byte_end if c_ref else 0)
+            if "quote" in s_keys and s["quote"]:
+                q_text = s["quote"]
+            else:
+                q_text = ""
+                sf = shard_dir / s["file_path"]
+                if sf.exists() and b_end > b_start:
+                    with open(sf, "rb") as f_in:
+                        f_in.seek(b_start)
+                        q_text = f_in.read(b_end - b_start).decode("utf-8", errors="replace")
             span = SourceSpan(
                 source_id=s["source_id"],
                 file_path=s["file_path"],
                 sha256_hash=s["sha256_hash"],
                 origin=s["origin"],
                 trust_tier=s["trust_tier"],
-                byte_start=s["byte_start"],
-                byte_end=s["byte_end"],
-                quote=s["quote"],
+                byte_start=b_start,
+                byte_end=b_end,
+                quote=q_text,
             )
             l2_quotes.append(span)
 
@@ -772,7 +871,7 @@ def explain(
         "file_path": source["file_path"],
         "byte_start": claim["byte_start"],
         "byte_end": claim["byte_end"],
-        "quote": source["quote"],
+        "quote": source["quote"] if "quote" in source.keys() else exact_slice,
         "exact_source_slice": exact_slice,
         "trust_tier": source["trust_tier"],
         "origin": source["origin"],
@@ -798,15 +897,23 @@ def history(
     cursor = conn.cursor()
 
     cursor.execute(
-        "SELECT * FROM claims_index WHERE namespace = ? AND subject = ? AND predicate = ? "
-        "ORDER BY valid_from ASC, created_at ASC",
+        "SELECT * FROM claims_index WHERE namespace = ? AND LOWER(subject) = LOWER(?) AND LOWER(predicate) = LOWER(?) "
+        "ORDER BY valid_from ASC, rowid ASC",
         (namespace, subject, predicate),
     )
     rows = cursor.fetchall()
+    if not rows:
+        cursor.execute(
+            "SELECT * FROM claims_index WHERE namespace = ? AND LOWER(predicate) = LOWER(?) "
+            "ORDER BY valid_from ASC, rowid ASC",
+            (namespace, predicate),
+        )
+        rows = cursor.fetchall()
     conn.close()
 
     timeline = []
     for r in rows:
+        r_keys = set(r.keys())
         timeline.append({
             "claim_id": r["claim_id"],
             "subject": r["subject"],
@@ -816,7 +923,7 @@ def history(
             "valid_from": r["valid_from"],
             "valid_to": r["valid_to"],
             "source_id": r["source_id"],
-            "created_at": r["created_at"],
+            "created_at": r["created_at"] if "created_at" in r_keys else r["valid_from"],
         })
     return timeline
 
@@ -836,18 +943,35 @@ def quarantine_list(
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
-    cursor.execute(
-        "SELECT c.*, s.file_path, s.origin, s.quote, s.trust_tier "
-        "FROM claims_index c LEFT JOIN sources_index s ON c.source_id = s.source_id "
-        "WHERE c.namespace = ? AND c.status IN ('quarantined', 'disputed') "
-        "ORDER BY c.created_at DESC",
-        (namespace,),
-    )
+    src_cols = {r[1] for r in cursor.execute("PRAGMA table_info(sources_index)").fetchall()}
+    if "quote" in src_cols:
+        cursor.execute(
+            "SELECT c.*, s.file_path, s.origin, s.quote, s.trust_tier "
+            "FROM claims_index c LEFT JOIN sources_index s ON c.source_id = s.source_id "
+            "WHERE c.namespace = ? AND c.status IN ('quarantined', 'disputed') "
+            "ORDER BY c.valid_from DESC, c.rowid DESC",
+            (namespace,),
+        )
+    else:
+        cursor.execute(
+            "SELECT c.*, s.file_path, s.origin, '' AS quote, s.trust_tier "
+            "FROM claims_index c LEFT JOIN sources_index s ON c.source_id = s.source_id "
+            "WHERE c.namespace = ? AND c.status IN ('quarantined', 'disputed') "
+            "ORDER BY c.valid_from DESC, c.rowid DESC",
+            (namespace,),
+        )
     rows = cursor.fetchall()
     conn.close()
 
     results = []
     for r in rows:
+        q_str = r["quote"]
+        if not q_str and r["file_path"]:
+            sf = shard_dir / r["file_path"]
+            if sf.exists() and r["byte_end"] > r["byte_start"]:
+                with open(sf, "rb") as f_in:
+                    f_in.seek(r["byte_start"])
+                    q_str = f_in.read(r["byte_end"] - r["byte_start"]).decode("utf-8", errors="replace")
         reason = (
             "Adversarial prompt injection pattern detected."
             if r["status"] == "quarantined"
@@ -862,7 +986,7 @@ def quarantine_list(
             "status": r["status"],
             "source_id": r["source_id"],
             "file_path": r["file_path"],
-            "quote": r["quote"],
+            "quote": q_str,
             "trust_tier": r["trust_tier"],
             "origin": r["origin"],
             "threat_reason": reason,
@@ -967,23 +1091,56 @@ def forget(
             pass
 
     # Delete claims and edges
+    lin_cols = {r[1] for r in cursor.execute("PRAGMA table_info(lineage_index)").fetchall()}
+    src_cols = {r[1] for r in cursor.execute("PRAGMA table_info(sources_index)").fetchall()}
+    suppr_cols = {r[1] for r in cursor.execute("PRAGMA table_info(suppression_hashes)").fetchall()}
+
     for cid in deleted_claim_ids:
+        if "fts_rowid" in lin_cols:
+            l_row = cursor.execute("SELECT vec_rowid, fts_rowid FROM lineage_index WHERE claim_id = ?", (cid,)).fetchone()
+            if l_row:
+                try:
+                    cursor.execute("DELETE FROM fts_claims WHERE rowid = ?", (l_row["fts_rowid"],))
+                except Exception:
+                    pass
+                try:
+                    import sqlite_vec
+                    conn.enable_load_extension(True)
+                    sqlite_vec.load(conn)
+                    conn.enable_load_extension(False)
+                    cursor.execute("DELETE FROM vec_claims WHERE rowid = ?", (l_row["vec_rowid"],))
+                except Exception:
+                    pass
+            cursor.execute("DELETE FROM lineage_index WHERE claim_id = ?", (cid,))
+        elif "parent_claim_id" in lin_cols:
+            cursor.execute("DELETE FROM lineage_index WHERE parent_claim_id = ? OR child_claim_id = ?", (cid, cid))
         cursor.execute("DELETE FROM claims_index WHERE claim_id = ?", (cid,))
-        cursor.execute("DELETE FROM lineage_index WHERE parent_claim_id = ? OR child_claim_id = ?", (cid, cid))
 
     # Also delete any other claims or sources mentioning target in object_val or quote
     cursor.execute("DELETE FROM claims_index WHERE object_val LIKE ?", (f"%{target}%",))
-    cursor.execute("DELETE FROM sources_index WHERE quote LIKE ?", (f"%{target}%",))
+    if "quote" in src_cols:
+        cursor.execute("DELETE FROM sources_index WHERE quote LIKE ?", (f"%{target}%",))
+    try:
+        cursor.execute("DELETE FROM fts_claims WHERE object_val LIKE ?", (f"%{target}%",))
+        cursor.execute("INSERT INTO fts_claims(fts_claims) VALUES('rebuild');")
+    except Exception:
+        pass
 
     # Record HMAC suppression hash (store mask in target_value to prevent plaintext leakage in sqlite)
     hmac_val = hmac.new(HMAC_SECRET, target_bytes, hashlib.sha256).hexdigest()
     hash_id = f"suppr_{uuid4().hex[:6]}"
     now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
-    cursor.execute(
-        "INSERT OR REPLACE INTO suppression_hashes VALUES (?, ?, ?, ?, ?)",
-        (hash_id, hmac_val, "claim", "[SUPPRESSED_TARGET]", now_iso),
-    )
+    if "hmac_hash" in suppr_cols:
+        cursor.execute(
+            "INSERT OR REPLACE INTO suppression_hashes VALUES (?, ?, ?, ?, ?)",
+            (hash_id, hmac_val, "claim", "[SUPPRESSED_TARGET]", now_iso),
+        )
+    else:
+        cursor.execute(
+            "INSERT OR REPLACE INTO suppression_hashes (fact_hmac, deleted_at) VALUES (?, ?)",
+            (hmac_val, now_iso),
+        )
     conn.commit()
 
     # Execute secure deletion and vacuum
@@ -1084,7 +1241,11 @@ def verify_deletion(
         conn = sqlite3.connect(str(db_path))
         cursor = conn.cursor()
         target_hmac = hmac.new(HMAC_SECRET, target_bytes, hashlib.sha256).hexdigest()
-        cursor.execute("SELECT 1 FROM suppression_hashes WHERE hmac_hash = ? OR target_value = ?", (target_hmac, target))
+        suppr_cols = {r[1] for r in cursor.execute("PRAGMA table_info(suppression_hashes)").fetchall()}
+        if "hmac_hash" in suppr_cols:
+            cursor.execute("SELECT 1 FROM suppression_hashes WHERE hmac_hash = ? OR target_value = ?", (target_hmac, target))
+        else:
+            cursor.execute("SELECT 1 FROM suppression_hashes WHERE fact_hmac = ?", (target_hmac,))
         has_hash = cursor.fetchone() is not None
         conn.close()
 

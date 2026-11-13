@@ -190,19 +190,31 @@ def list_claims(namespace: str):
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
-    cursor.execute("""
-        SELECT c.*, s.file_path, s.trust_tier, s.quote as source_quote, s.origin
+    src_cols = {r[1] for r in cursor.execute("PRAGMA table_info(sources_index)").fetchall()}
+    claim_cols = {r[1] for r in cursor.execute("PRAGMA table_info(claims_index)").fetchall()}
+    quote_expr = "s.quote" if "quote" in src_cols else "''"
+    order_col = "c.created_at" if "created_at" in claim_cols else "c.valid_from"
+
+    cursor.execute(f"""
+        SELECT c.*, s.file_path, s.trust_tier, {quote_expr} as source_quote, s.origin
         FROM claims_index c
         LEFT JOIN sources_index s ON c.source_id = s.source_id
         WHERE c.namespace = ?
-        ORDER BY c.created_at DESC
+        ORDER BY {order_col} DESC, c.rowid DESC
     """, (namespace,))
     rows = cursor.fetchall()
     conn.close()
 
     claims = []
     for r in rows:
-        claims.append(dict(r))
+        d = dict(r)
+        if not d.get("source_quote") and d.get("file_path"):
+            sf = shard_dir / d["file_path"]
+            if sf.exists() and d["byte_end"] > d["byte_start"]:
+                with open(sf, "rb") as f_in:
+                    f_in.seek(d["byte_start"])
+                    d["source_quote"] = f_in.read(d["byte_end"] - d["byte_start"]).decode("utf-8", errors="replace")
+        claims.append(d)
 
     return {"namespace": namespace, "claims": claims}
 
@@ -301,10 +313,17 @@ def live_byte_scan(req: ByteScanRequest):
     if db_path.exists():
         conn = sqlite3.connect(str(db_path))
         cursor = conn.cursor()
-        cursor.execute(
-            "SELECT 1 FROM suppression_hashes WHERE hmac_hash = ? OR target_value = ? OR target_value = '[SUPPRESSED_TARGET]'",
-            (hmac_hash, req.query),
-        )
+        suppr_cols = {r[1] for r in cursor.execute("PRAGMA table_info(suppression_hashes)").fetchall()}
+        if "hmac_hash" in suppr_cols:
+            cursor.execute(
+                "SELECT 1 FROM suppression_hashes WHERE hmac_hash = ? OR target_value = ? OR target_value = '[SUPPRESSED_TARGET]'",
+                (hmac_hash, req.query),
+            )
+        else:
+            cursor.execute(
+                "SELECT 1 FROM suppression_hashes WHERE fact_hmac = ?",
+                (hmac_hash,),
+            )
         has_hash = cursor.fetchone() is not None
         conn.close()
 

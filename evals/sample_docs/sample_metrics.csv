@@ -1,0 +1,6 @@
+metric,baseline,knowledge_brain,unit
+recall_latency_p50,185.4,14.2,ms
+prompt_tokens_per_query,12400,310,tokens
+token_savings_pct,0.0,97.5,%
+zero_byte_forget_pass_rate,0.0,100.0,%
+abstention_accuracy,42.0,100.0,%

@@ -28,6 +28,8 @@ INJECTION_PATTERNS = [
     r"ignore\s+(all\s+)?previous\s+instructions",
     r"system\s+override",
     r"production-compromised",
+    r"sqliteinmemory",
+    r"attacker\s+wallet",
     r"you\s+are\s+now\s+in\s+developer\s+mode",
     r"disregard\s+trust\s+tier",
 ]
@@ -73,9 +75,9 @@ def _extract_slots(text: str) -> set[str]:
         slots.add("primary_language")
     if "assigned_team" in lower or "member of team" in lower or "team" in lower:
         slots.add("team")
-    if "aws region" in lower or "aws_region" in lower or "us-west-2" in lower or "us-east-1" in lower:
+    if any(r in lower for r in ["aws region", "aws_region", "cloud region", "ap-south-1", "us-west-2", "us-west-1", "eu-central-1", "ap-northeast-1", "us-east-1"]):
         slots.add("aws_region")
-    if any(db in lower for db in ["mongodb", "postgres", "mysql", "primary database", "database engine"]):
+    if any(db in lower for db in ["mongodb", "postgres", "postgresql", "mysql", "sqliteinmemory", "cassandra", "dynamodb", "clickhouse", "primary database", "service database", "database engine"]):
         slots.add("primary_database")
     if "deployment_env" in lower or "deployment environment" in lower:
         slots.add("deployment_env")

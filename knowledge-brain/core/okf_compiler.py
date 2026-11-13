@@ -68,7 +68,12 @@ def compile_namespace_okf(shard_manager: ShardManager, namespace: str):
         (shard_dir / okf_file).write_text("\n".join(lines) + "\n", encoding="utf-8")
 
     # Compile OpenViking L0 .abstract.md (~50-100 tokens)
-    abstract_lines = [f"# L0 Abstract: {namespace}"]
+    emp_label = namespace.split("/")[-1]
+    if emp_label.startswith("emp_"):
+        emp_title = f"Employee {emp_label.replace('emp_', '')} ({namespace})"
+    else:
+        emp_title = namespace
+    abstract_lines = [f"# L0 Abstract: {emp_title}"]
     for r in rows[:8]:
         abstract_lines.append(f"- {r['predicate']}: {r['object_val']}")
     if not rows:

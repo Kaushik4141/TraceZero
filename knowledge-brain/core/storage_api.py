@@ -1,3 +1,4 @@
+import re
 import sqlite3
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
@@ -92,7 +93,10 @@ class MemoryStore:
         if self.is_suppressed(claim.namespace, claim.subject, claim.predicate, claim.object_val):
             return False
 
-        semantic_text = f"{claim.subject} {claim.predicate} {claim.object_val}"
+        if claim.predicate in ("has_note", "stated"):
+            semantic_text = f"{claim.subject}: {claim.object_val}"
+        else:
+            semantic_text = f"{claim.subject} {claim.predicate} {claim.object_val}"
         vec = embed_text(semantic_text)
         self.sm.insert_claim_with_lineage(claim, vec)
         if claim.status == ClaimStatus.ACTIVE:
@@ -104,11 +108,12 @@ class MemoryStore:
         self, namespace: str, query: str, top_k: int = 8, include_superseded: bool = False
     ) -> List[Dict[str, Any]]:
         q_vec = embed_text(query)
+        q_vec_bytes = serialize_f32(q_vec)
         allowed_statuses = ("active", "disputed", "superseded") if include_superseded else ("active", "disputed")
         placeholders = ",".join("?" for _ in allowed_statuses)
 
         with self.sm.get_connection(namespace) as conn:
-            sql = f"""
+            vec_sql = f"""
                 SELECT c.*, s.file_path, s.origin, s.trust_tier, v.distance
                 FROM vec_claims v
                 JOIN lineage_index l ON l.vec_rowid = v.rowid
@@ -118,8 +123,49 @@ class MemoryStore:
                   AND c.status IN ({placeholders})
                 ORDER BY v.distance ASC
             """
-            rows = conn.execute(sql, (serialize_f32(q_vec), top_k, *allowed_statuses)).fetchall()
-            return [dict(r) for r in rows]
+            rows = [dict(r) for r in conn.execute(vec_sql, (q_vec_bytes, top_k, *allowed_statuses)).fetchall()]
+            seen_ids = {r["claim_id"] for r in rows}
+
+            # Complement vector KNN with FTS5 keyword matches scored by exact L2 distance
+            _fts_stop = {
+                "what", "when", "where", "who", "whom", "whose", "why", "how",
+                "did", "does", "are", "was", "were", "the", "and", "for", "with",
+                "from", "into", "this", "that", "have", "has", "had", "not", "near",
+            }
+            terms = [
+                t for t in re.findall(r"[a-z0-9]+", query.lower())
+                if len(t) >= 3 and t not in _fts_stop
+            ]
+            if terms:
+                fts_tokens = [f'"{t[:6]}"*' if len(t) >= 6 else f'"{t}"*' for t in dict.fromkeys(terms[:12])]
+                fts_query = " OR ".join(fts_tokens)
+                fts_sql = f"""
+                    SELECT c.*, s.file_path, s.origin, s.trust_tier,
+                           vec_distance_L2(v.embedding, ?) AS distance
+                    FROM fts_claims f
+                    JOIN lineage_index l ON l.fts_rowid = f.rowid
+                    JOIN claims_index c ON c.claim_id = l.claim_id
+                    JOIN sources_index s ON s.source_id = c.source_id
+                    JOIN vec_claims v ON v.rowid = l.vec_rowid
+                    WHERE fts_claims MATCH ?
+                      AND c.status IN ({placeholders})
+                    ORDER BY distance ASC
+                    LIMIT ?
+                """
+                try:
+                    fts_rows = conn.execute(
+                        fts_sql, (q_vec_bytes, fts_query, *allowed_statuses, max(top_k * 3, 30))
+                    ).fetchall()
+                    for r in fts_rows:
+                        d = dict(r)
+                        if d["claim_id"] not in seen_ids:
+                            seen_ids.add(d["claim_id"])
+                            rows.append(d)
+                except sqlite3.OperationalError:
+                    pass
+
+            rows.sort(key=lambda r: float(r.get("distance", 999.0)))
+            return rows[:top_k]
 
     def query_graph_multihop(self, namespace: str, start_subject: str, max_hops: int = 3) -> List[Dict[str, Any]]:
         """Recursive CTE graph traversal over claims_index triples."""

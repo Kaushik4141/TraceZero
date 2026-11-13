@@ -228,10 +228,10 @@ def create_handoff(
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
 
-        # Query active claims for this namespace
+        # Query active structured claims (excluding raw bulk has_note / stated notes so handoff remains compact)
         cursor.execute(
             "SELECT claim_id, subject, predicate, object_val, source_id, byte_start, byte_end "
-            "FROM claims_index WHERE status = 'active'"
+            "FROM claims_index WHERE status = 'active' AND predicate NOT IN ('has_note', 'stated')"
         )
         active_claims = cursor.fetchall()
 
@@ -267,6 +267,12 @@ def create_handoff(
                 s_info = sources_by_id[src_id]
                 quote = s_info.get("quote", "")
                 fpath = s_info.get("file_path", "")
+                if not quote and fpath:
+                    sf = shard_dir / fpath
+                    if sf.exists() and c_row["byte_end"] > c_row["byte_start"]:
+                        with open(sf, "rb") as f_in:
+                            f_in.seek(c_row["byte_start"])
+                            quote = f_in.read(c_row["byte_end"] - c_row["byte_start"]).decode("utf-8", errors="replace").strip()
                 tier = s_info.get("trust_tier", 1)
                 citations_dict[src_id] = f'{fpath} "{quote}" (trust_tier={tier})'
 

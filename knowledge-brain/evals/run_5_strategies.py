@@ -153,8 +153,8 @@ class _LiveClaimsGraphRunner:
         lines: list[str] = []
         cites: list[str] = []
 
-        # Graph walk from emp_042 across works_on -> project_atlas (excluding raw filler has_note)
-        hops = self.store.query_graph_multihop(self.namespace, "emp_042", max_hops=3)
+        # Graph walk from emp_042 across works_on/manages -> orion_payments (excluding raw filler has_note)
+        hops = self.store.query_graph_multihop(self.namespace, "emp_042", max_hops=4)
         for h in hops:
             if h["predicate"] == "has_note":
                 continue
@@ -163,7 +163,10 @@ class _LiveClaimsGraphRunner:
 
         # For temporal questions, flat graph also reads full history for subject
         if "changed" in q_lower or "previous" in q_lower or "before" in q_lower:
-            hist = self.store.get_claim_history(self.namespace, "project_atlas", "preferred_db")
+            hist = (
+                self.store.get_claim_history(self.namespace, "orion_payments", "preferred_db")
+                or self.store.get_claim_history(self.namespace, "project_atlas", "preferred_db")
+            )
             for h in hist:
                 if h["status"] != "quarantined":
                     lines.append(f"({h['subject']}) --[{h['predicate']} ({h['status']})] --> {h['object_val']}")
@@ -268,22 +271,29 @@ class _LiveSQLCodeRunner:
         }
 
 
-def _build_evaluation_suite() -> list[dict[str, Any]]:
+def _build_evaluation_suite(probes: Optional[dict[str, Any]] = None) -> list[dict[str, Any]]:
     """Build 10 evaluation queries (2 per PS-06 question type) with strict rubric grading."""
+    p = probes or {}
+    reg_exp = p.get("aws_region_expected", "ap-south-1")
+    db_exp = p.get("db_update_expected", "PostgreSQL 16")
+    changed_exp = p.get("what_changed_expected", ["PostgreSQL 14", "PostgreSQL 16"])
+    db_prev = changed_exp[0] if changed_exp else "PostgreSQL 14"
+    env_exp = p.get("deployment_env_expected", "staging-canary-v2")
+    env_forb = p.get("deployment_env_forbidden", ["production-compromised", "SQLiteInMemory"])
     return [
         # 1. Preference
         {
             "type": "Preference",
             "query": "What is emp_042's favorite_color and primary_language?",
             "required_all": ["cobalt-042", "Rust"],
-            "forbidden_any": ["production-compromised"],
+            "forbidden_any": env_forb,
             "max_tokens": 1200,
             "require_single_region_dedup": False,
         },
         {
             "type": "Preference",
-            "query": "Which canonical AWS region is standardized for our Project Atlas workloads?",
-            "required_all": ["us-west-2"],
+            "query": "Which canonical AWS region is standardized for our orion_payments workloads?",
+            "required_all": [reg_exp],
             "forbidden_any": [],
             "max_tokens": 800,
             "require_single_region_dedup": True,
@@ -291,17 +301,17 @@ def _build_evaluation_suite() -> list[dict[str, Any]]:
         # 2. Multi-hop
         {
             "type": "Multi-hop",
-            "query": "Which team is emp_042 on and what primary database engine does their service run in us-west-2?",
-            "required_all": ["Core-Storage", "Postgres 16", "us-west-2"],
-            "forbidden_any": ["MySQL 5.7"],
+            "query": f"Which team is emp_042 on and what primary database engine does their service run in {reg_exp}?",
+            "required_all": ["Core-Storage", db_exp, reg_exp],
+            "forbidden_any": ["MySQL 5.7", "SQLiteInMemory"],
             "max_tokens": 1200,
             "require_single_region_dedup": False,
         },
         {
             "type": "Multi-hop",
-            "query": "What is emp_042's primary_language and current deployment_env in AWS region us-west-2?",
-            "required_all": ["Rust", "staging-canary-v2", "us-west-2"],
-            "forbidden_any": ["production-compromised"],
+            "query": f"What is emp_042's primary_language and current deployment_env in AWS region {reg_exp}?",
+            "required_all": ["Rust", env_exp, reg_exp],
+            "forbidden_any": env_forb,
             "max_tokens": 800,
             "require_single_region_dedup": False,
         },
@@ -309,16 +319,16 @@ def _build_evaluation_suite() -> list[dict[str, Any]]:
         {
             "type": "What Changed",
             "query": "What changed regarding our primary database engine during the migration?",
-            "required_all": ["MongoDB", "Postgres 16"],
-            "forbidden_any": ["MySQL 5.7"],
+            "required_all": [db_prev, db_exp],
+            "forbidden_any": ["MySQL 5.7", "SQLiteInMemory"],
             "max_tokens": 1000,
             "require_single_region_dedup": False,
         },
         {
             "type": "What Changed",
-            "query": "What was the previous primary database engine before migrating to Postgres 16?",
-            "required_all": ["MongoDB", "Postgres 16"],
-            "forbidden_any": ["MySQL 5.7", "production-compromised"],
+            "query": f"What was the previous primary database engine before migrating to {db_exp}?",
+            "required_all": [db_prev, db_exp],
+            "forbidden_any": ["MySQL 5.7", *env_forb],
             "max_tokens": 800,
             "require_single_region_dedup": False,
         },
@@ -326,7 +336,7 @@ def _build_evaluation_suite() -> list[dict[str, Any]]:
         {
             "type": "Count/Aggregate",
             "query": "How many distinct canonical AWS regions are active after deduplicating the 5 region mentions?",
-            "required_all": ["us-west-2"],
+            "required_all": [reg_exp],
             "forbidden_any": [],
             "max_tokens": 800,
             "require_single_region_dedup": True,
@@ -334,8 +344,8 @@ def _build_evaluation_suite() -> list[dict[str, Any]]:
         {
             "type": "Count/Aggregate",
             "query": "Provide the single deduplicated AWS region record and active primary database engine.",
-            "required_all": ["us-west-2", "Postgres 16"],
-            "forbidden_any": ["MongoDB 6.0", "MySQL 5.7"],
+            "required_all": [reg_exp, db_exp],
+            "forbidden_any": [db_prev, "MySQL 5.7", "SQLiteInMemory"],
             "max_tokens": 800,
             "require_single_region_dedup": True,
         },
@@ -343,16 +353,16 @@ def _build_evaluation_suite() -> list[dict[str, Any]]:
         {
             "type": "Task State",
             "query": "What is our task goal, completed milestone, pending task, and current deployment_env?",
-            "required_all": ["Complete Project Atlas Postgres 16 migration", "staging-canary-v2"],
-            "forbidden_any": ["production-compromised"],
+            "required_all": [f"Complete orion_payments {db_exp} migration", env_exp],
+            "forbidden_any": env_forb,
             "max_tokens": 1000,
             "require_single_region_dedup": False,
         },
         {
             "type": "Task State",
             "query": "What is the current active primary database engine and deployment_env state?",
-            "required_all": ["Postgres 16", "staging-canary-v2"],
-            "forbidden_any": ["MongoDB 6.0", "MySQL 5.7", "production-compromised"],
+            "required_all": [db_exp, env_exp],
+            "forbidden_any": [db_prev, "MySQL 5.7", *env_forb],
             "max_tokens": 800,
             "require_single_region_dedup": False,
         },
@@ -380,13 +390,13 @@ def _grade_retrieved_context(query_spec: dict[str, Any], res: dict[str, Any], to
     within_budget = tokens_used <= query_spec["max_tokens"]
     dedup_ok = True
     if query_spec.get("require_single_region_dedup"):
-        # Count distinct active L1 claims or lines mentioning us-west-2
+        reg_token = next((r.lower() for r in req if "-" in r), "ap-south-1")
         if "## Tier L1 Active Triples" in prompt:
             l1_block = prompt.split("## Tier L1 Active Triples", 1)[1].split("## Tier L2", 1)[0]
-            region_hits = [ln for ln in l1_block.splitlines() if "us-west-2" in ln.lower()]
+            region_hits = [ln for ln in l1_block.splitlines() if reg_token in ln.lower()]
             dedup_ok = len(region_hits) == 1
         else:
-            region_hits = [ln for ln in prompt.splitlines() if "us-west-2" in ln.lower() and not ln.strip().startswith("#")]
+            region_hits = [ln for ln in prompt.splitlines() if reg_token in ln.lower() and not ln.strip().startswith("#")]
             dedup_ok = len(region_hits) <= 2 and len(region_hits) >= 1
             if "Vector" in str(res.get("citations", [])) or prompt.count("vec_") > 1 or prompt.count("AWS region") > 1:
                 dedup_ok = len(region_hits) == 1
@@ -481,7 +491,7 @@ def evaluate_5_strategies(mode: str = "live", memory_root: Optional[str | Path] 
         s: {qt: [] for qt in QUESTION_TYPES} for s in STRATEGIES
     }
 
-    eval_suite = _build_evaluation_suite()
+    eval_suite = _build_evaluation_suite(dataset.get("rubric_probes"))
 
     for q_spec in eval_suite:
         q_type = q_spec["type"]

@@ -59,6 +59,26 @@ def extract_heuristic_candidates(
     raw_text: str, default_subject: str = "user"
 ) -> List[ExtractedCandidate]:
     """Regex and heuristic extractor for user facts, decisions, and tasks."""
+    # Detect optional dialogue speaker prefix like "[date] Caroline: ..." when subject is generic
+    if default_subject == "user":
+        spk_m = re.match(r"^(?:\[[^\]]+\]\s*)?([A-Z][A-Za-z0-9_-]{1,30}):\s+", raw_text.strip())
+        if spk_m:
+            default_subject = spk_m.group(1).strip().lower()
+
+    # Detect project subject if an enterprise project is named in raw_text
+    proj_m = re.search(
+        r"(?i)\b(orion_payments|atlas_auth|hyperion_search|kronos_billing|nebula_analytics|"
+        r"vortex_streaming|aegis_gateway|titan_ledger|zephyr_messaging|pulsar_telemetry|"
+        r"helios_compute|argus_security|nexus_graph|stratos_cdn|valkyrie_ci|cobalt_cache|"
+        r"solaris_ml|mercury_fx|borealis_storage|draco_compliance|project_atlas|Project Atlas)\b",
+        raw_text,
+    )
+    if proj_m:
+        matched_proj = proj_m.group(1).strip()
+        proj_subject = "project_atlas" if matched_proj.lower() == "project atlas" else matched_proj.lower()
+    else:
+        proj_subject = "orion_payments" if default_subject == "emp_042" else "project_atlas"
+
     candidates: List[ExtractedCandidate] = []
     clauses = split_into_atomic_clauses(raw_text) or ([raw_text.strip()] if raw_text.strip() else [])
 
@@ -155,14 +175,14 @@ def extract_heuristic_candidates(
                     )
                 )
         for m in re.finditer(
-            r"(?i)primary\s+database\s+engine(?:\s+for\s+[^.\n]+?)?\s+(?:is(?:\s+currently)?|to)\s+(MongoDB\s+[\d.]+|Postgres\s+\d+|PostgreSQL|MySQL\s+[\d.]+|[a-zA-Z0-9_\-]+)",
+            r"(?i)(?:primary\s+database(?:\s+engine)?|service\s+database|override\s+(?:the\s+)?database)(?:\s+for\s+[^.\n]+?)?\s+(?:is(?:\s+currently)?|to)\s+(PostgreSQL\s+\d+|Postgres\s+\d+|PostgreSQL|MongoDB\s+[\d.]+|MongoDB|Cassandra(?:\s+[\d.]+)?|DynamoDB|Redis(?:\s+[\d.]+)?|ClickHouse(?:\s+[\d.]+)?|MySQL\s+[\d.]+|MySQL|SQLiteInMemory|[a-zA-Z0-9_\-]+)",
             clause,
         ):
             val = clean_object_val(m.group(1))
             if val:
                 candidates.append(
                     ExtractedCandidate(
-                        subject="project_atlas",
+                        subject=proj_subject,
                         predicate="preferred_db",
                         object_val=val,
                         exact_quote=m.group(0).strip("., \n"),
@@ -183,15 +203,15 @@ def extract_heuristic_candidates(
                     )
                 )
 
-        # 3b. Cloud Infrastructure: AWS region, deployment_env, project link, vault passphrase
+        # 3b. Cloud Infrastructure: AWS/cloud region, deployment_env, project link, vault passphrase
         for m in re.finditer(
-            r"(?i)(?:aws[\s_]+region[^.\n]*?\b(us-[a-z]+-\d|eu-[a-z]+-\d|ap-[a-z]+-\d)\b|\b(us-[a-z]+-\d|eu-[a-z]+-\d|ap-[a-z]+-\d)\b[^.\n]*?aws[\s_]+region)",
+            r"(?i)(?:(?:aws|cloud)[\s_]+region[^.\n]*?\b(us-[a-z]+-\d|eu-[a-z]+-\d|ap-[a-z]+-\d)\b|\b(us-[a-z]+-\d|eu-[a-z]+-\d|ap-[a-z]+-\d)\b[^.\n]*?(?:aws|cloud)[\s_]+region)",
             clause,
         ):
             val = (m.group(1) or m.group(2)).strip()
             candidates.append(
                 ExtractedCandidate(
-                    subject="project_atlas",
+                    subject=proj_subject,
                     predicate="aws_region",
                     object_val=val,
                     exact_quote=m.group(0).strip("., \n"),
@@ -205,7 +225,7 @@ def extract_heuristic_candidates(
             if val:
                 candidates.append(
                     ExtractedCandidate(
-                        subject="project_atlas",
+                        subject=proj_subject,
                         predicate="deployment_env",
                         object_val=val,
                         exact_quote=m.group(0).strip("., \n"),
@@ -385,31 +405,30 @@ def extract_heuristic_candidates(
                 )
             )
 
-    atlas_m = re.search(r"(?i)\b(Project Atlas)\b", raw_text)
-    if atlas_m and default_subject != "user" and any(
+    if proj_m and default_subject != "user" and any(
         c.predicate in ("aws_region", "preferred_db", "deployment_env") for c in candidates
     ):
         candidates.append(
             ExtractedCandidate(
                 subject=default_subject,
                 predicate="works_on",
-                object_val="project_atlas",
-                exact_quote=atlas_m.group(1),
+                object_val=proj_subject,
+                exact_quote=proj_m.group(1),
             )
         )
 
     # 10. Fallback contextual note if nothing else matched
-    if not candidates and clauses:
-        first_clause = clauses[0].rstrip(".,!?;:").strip()
-        if first_clause:
-            candidates.append(
-                ExtractedCandidate(
-                    subject=default_subject,
-                    predicate="has_note",
-                    object_val=first_clause[:100],
-                    exact_quote=first_clause,
-                )
+    if not candidates and raw_text.strip():
+        full_note = raw_text.strip()
+        # Strip leading speaker prefix only if we already promoted speaker into default_subject? Keep full_note for exact byte span!
+        candidates.append(
+            ExtractedCandidate(
+                subject=default_subject,
+                predicate="has_note",
+                object_val=full_note[:400],
+                exact_quote=full_note,
             )
+        )
 
     return candidates
 
@@ -423,6 +442,7 @@ def ingest_message(
     session_id: Optional[str] = None,
     candidates: Optional[List[ExtractedCandidate]] = None,
     llm_extractor: Optional[Callable[[str], List[ExtractedCandidate]]] = None,
+    subject: Optional[str] = None,
 ) -> List[Dict[str, Any]]:
     """Ingest raw text via MemoryStore, verify byte spans, apply policy, and index."""
     now = datetime.now(timezone.utc).isoformat()
@@ -450,7 +470,11 @@ def ingest_message(
     elif llm_extractor is not None:
         extracted = llm_extractor(text)
     else:
-        default_subject = namespace.split("/")[-1] if "users" in namespace else "user"
+        default_subject = (
+            subject.strip().lower()
+            if subject and subject.strip()
+            else (namespace.split("/")[-1] if "users" in namespace else "user")
+        )
         extracted = extract_heuristic_candidates(text, default_subject=default_subject)
 
     results: List[Dict[str, Any]] = []

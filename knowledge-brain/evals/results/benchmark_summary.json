@@ -1,0 +1,1372 @@
+{
+  "benchmark_suite": {
+    "mode": "live",
+    "namespace_collision_test": {
+      "total_employees": 100,
+      "passed": 100,
+      "isolation_rate_pct": 100.0
+    },
+    "rubric_edge_cases": {
+      "1_aws_region_deduplication": true,
+      "2_valid_user_update_postgres16": true,
+      "3_lower_trust_doc_contradiction_rejected": true,
+      "4_prompt_injection_quarantined": true,
+      "5_verified_deletion_and_10_probes": true,
+      "5b_never_stored_deletion_clean": true,
+      "6_unanswerable_abstention_gate": true,
+      "post_deletion_probes_tested": 10,
+      "post_deletion_leaks": 0,
+      "unanswerable_tested": 2,
+      "unanswerable_abstained": 2
+    },
+    "token_efficiency": {
+      "full_30_session_tokens": 17539,
+      "avg_recalled_tokens": 244.2,
+      "max_recalled_tokens": 315,
+      "token_budget": 800,
+      "token_savings_pct": 98.61
+    },
+    "byte_cleanliness": {
+      "knowledge_brain_byte_matches": 0,
+      "knowledge_brain_clean_rate_pct": 100.0,
+      "naive_rag_byte_matches": 1,
+      "naive_rag_clean_rate_pct": 0.0,
+      "mem0_baseline_raw_source_byte_matches": 1,
+      "mem0_baseline_clean_rate_pct": 0.0
+    },
+    "baseline_comparison": {
+      "full_history_30_sessions": {
+        "avg_tokens": 17539,
+        "accuracy_pct": 20.0,
+        "p50_latency_ms": 0.01,
+        "p95_latency_ms": 0.02,
+        "contradiction_accuracy_pct": 0.0,
+        "poison_resistance_pct": 0.0,
+        "abstention_precision_pct": 0.0,
+        "byte_clean_deletion_pct": 0.0
+      },
+      "naive_vector_rag": {
+        "avg_tokens": 273.7,
+        "accuracy_pct": 25.0,
+        "p50_latency_ms": 49.13,
+        "p95_latency_ms": 49.3,
+        "contradiction_accuracy_pct": 0.0,
+        "poison_resistance_pct": 0.0,
+        "abstention_precision_pct": 0.0,
+        "byte_clean_deletion_pct": 0.0
+      },
+      "knowledge_brain": {
+        "avg_tokens": 244.2,
+        "accuracy_pct": 100.0,
+        "p50_latency_ms": 7.35,
+        "p95_latency_ms": 55.1,
+        "contradiction_accuracy_pct": 100.0,
+        "poison_resistance_pct": 100.0,
+        "abstention_precision_pct": 100.0,
+        "byte_clean_deletion_pct": 100.0
+      }
+    },
+    "deletion_receipts": {
+      "stored_secret_receipt": {
+        "receipt_id": "del_96741c02",
+        "namespace": "acme_corp/users/emp_042",
+        "target_query": "OrionVault#2026!",
+        "target": "OrionVault#2026!",
+        "deleted_claim_ids": [
+          "clm_287e005c6987"
+        ],
+        "redacted_source_spans": [
+          "sources/session_11.txt:2742:2815"
+        ],
+        "suppression_hmacs": [
+          "eafbb114243b1d04e6b162b74d699419e9001696165dce6957e6910c78e2b34d"
+        ],
+        "hmac_suppression_hash": "eafbb114243b1d04e6b162b74d699419e9001696165dce6957e6910c78e2b34d",
+        "fts_rebuilt": true,
+        "vacuum_completed": true,
+        "byte_scan_matches": 0,
+        "sqlite_byte_matches": 0,
+        "wal_byte_matches": 0,
+        "filesystem_byte_matches": 0,
+        "probe_abstentions": "VERIFIED_ABSTAINED_10_PROBES",
+        "sha256_after": "",
+        "scrubbed_files_sha256": {
+          ".abstract.md": "e81161317d73fe3193811276508c15bdb1ed36cd2ba9dfc1633d80e791292758",
+          "decisions.okf.md": "39930730e562950057e04a1003b6b1698e73ab45afc94c50ea57cc317153229b",
+          "index.sqlite": "c944c63df9e86748df1e8e981effe07887ff381f0ddffad3748bc5ee2e38559e",
+          "index.sqlite-shm": "536e087f5f5f259cb9134689e1839ded1488c34bd44c07277ea7bc5f31683aad",
+          "index.sqlite-wal": "7052af8ee70200b7660a4096141b74a5b373d9aeb1e22be6eed284af10226586",
+          "notes.okf.md": "61bcf75d6d5fbb67915a6d7ec03658b47e08c8732d30d77ff9652f1838baabf5",
+          "preferences.okf.md": "4c68b376aa348da4f13271e6a347abd53fb8efbc4f02df1f605b4de94fcf07b5",
+          "sources/session_00_profile.txt": "3d2d256f7b62e4493b11b70d1b9f70e9124ae5aafe4318612b0f50bc85adc7aa",
+          "sources/session_01.txt": "dce500e2e7edb8845ce0da52e24e0703052566f02bcbb32edca0ba233d2689bd",
+          "sources/session_02.txt": "6da1d056763867244dfce4e2726be531e8c9caa92df0cf7b7a7c45c15883b2da",
+          "sources/session_03.txt": "8dcdeebfc152549bc8b8b9551ba685679c1da02f89b6ae24eee25a9549e2f27a",
+          "sources/session_04.txt": "fe02527663fb53ef1073ed8ff89a05316bad2cb490c012ce05ea6a2d5d347bcf",
+          "sources/session_05.txt": "0835eb017ed513e1fe9799698647f5365fce06854b0af0b027354e0dada49bed",
+          "sources/session_06.txt": "93807685429f2624bb48775a301eeb18d21beab728621abc1cdb1bb968f7d73b",
+          "sources/session_07.txt": "f0a2b2f1ae43360bc78a81b8b813581bf1a4f365069ba79a7a080532bdb5c018",
+          "sources/session_08.txt": "82e4d2183de2592c7d6a4f1061d390d8c1fc768b92d91838016ef8f14a38fe90",
+          "sources/session_09.txt": "1a646babb8052549985b4792b13e9dd7fa567186286e70b5afcd2986dc1ab0bb",
+          "sources/session_10.txt": "ddc62964aa190e13ac6a24a222c4bfc5deccfda0ea87cbb9038f069a6ce53cf8",
+          "sources/session_11.txt": "8e83c8224f473656d7e93506872366cc910457fb9852976e22f5bf571d5afe40",
+          "sources/session_12.txt": "f5d5db90219c65cfa1d1c699725cc2bfd2be3ea1f26938857d1cedcb10814374",
+          "sources/session_13.txt": "37f40a20a445a1ae51cc6a96176a6e46de1ca2a7c738506d47235a73459b116a",
+          "sources/session_14.txt": "9e3d7b9bebc9fd868ee8bf67fa2a02e87d21afac0a7ed1a685e1f6fde1f5c501",
+          "sources/session_15.txt": "5f9983e27dba0d6a313351c62e6e8efb168af5e99a6ea53add23e9fb4482aa17",
+          "sources/session_16.txt": "d1e13386e9783170588fa020b3315095031d118447519ae1003641095d651048",
+          "sources/session_17.txt": "3f8a4346d1c298ddb5c21895d6a61a66ae0dc7ed71498815253c62acae5c3dc0",
+          "sources/session_18.txt": "1d7b36b2ba978271a2b5153cd39503ee35b1e9e30ebe3188508105687967bb6a",
+          "sources/session_19.txt": "065829ceea3d8f8bb1d7edfee7d1365ad3c83d51540517dae192f47ac4ed2e6f",
+          "sources/session_20.txt": "7406bc867a74c0d4addf4f38858f392ba4ec3566f27e7424240073e8812c698b",
+          "sources/session_21.txt": "daa34c7969c052e77277959a45f5eccd9c8fa21ae2d6ab6460092ee6aff365ea",
+          "sources/session_22.txt": "4b7678c7da3a788cfdbefd29c15b65c489cce98568d6b503f3f28406f0e7136f",
+          "sources/session_23.txt": "720168bfc9e7e0bacfdc0123aa0bd171f98c947c5167d0ad96c8f7ebb58d5120",
+          "sources/session_24.txt": "2e6df5060f2d920e380fa80a5c5da468e0d0d8d1aabfcff0dff87d792962393a",
+          "sources/session_25.txt": "8d304f6ec1ca90fde83873ea911a008314097bff56b493b3452b9816018b83d6",
+          "sources/session_26.txt": "706ddf96bb4a98ce04795ce1682a0cf91a246203f1dd0138f0291088fa25b092",
+          "sources/session_27.txt": "f0b4d51e91d3363b2a3a92d7fb471732556a09fdee04925ce8043e1440bdbeb9",
+          "sources/session_28.txt": "4d13bf4a7c78bdb25cfbba39bd36d3900d23e0fe829445ef2794055e67e29ec0",
+          "sources/session_29.txt": "1dcf23a0cd281bc0dd32489b8b22d05c89c947544e77bd2b76281c7b35253b11",
+          "sources/session_30.txt": "73c0fd330efe502ca3e3c0e4489159647b40e630bf95052ac300e22e399e3ebf",
+          "tasks.okf.md": "ab80525bbc9f1ab47daef1c7512e397c0dc287b6f75a37100277dfbd7f428ace"
+        },
+        "timestamp": "2026-11-13T06:14:47.499222+00:00",
+        "byte_matches": 0
+      },
+      "never_stored_secret_receipt": {
+        "receipt_id": "del_8bc9cfde",
+        "namespace": "acme_corp/users/emp_042",
+        "target_query": "NeverStoredPhantomKey#0000",
+        "target": "NeverStoredPhantomKey#0000",
+        "deleted_claim_ids": [],
+        "redacted_source_spans": [],
+        "suppression_hmacs": [],
+        "hmac_suppression_hash": "",
+        "fts_rebuilt": true,
+        "vacuum_completed": true,
+        "byte_scan_matches": 0,
+        "sqlite_byte_matches": 0,
+        "wal_byte_matches": 0,
+        "filesystem_byte_matches": 0,
+        "probe_abstentions": "VERIFIED_ABSTAINED_10_PROBES",
+        "sha256_after": "",
+        "scrubbed_files_sha256": {
+          ".abstract.md": "e81161317d73fe3193811276508c15bdb1ed36cd2ba9dfc1633d80e791292758",
+          "decisions.okf.md": "701370ce6abc9f6b07581a403988a767e7b12715920a2b250848e60ed8c0b423",
+          "index.sqlite": "e2cb5bd8878e7a7c8a6ab7799f3eb28ba4d73e998dab62613f07204af1a6fb6d",
+          "index.sqlite-shm": "4cecf3d9d94862b3177a0684474fa34140a69dee8b9d5d1d8ebaf794d97ea074",
+          "index.sqlite-wal": "f9ca31e92303c5acf3c0162a08a9a1d2a37fd8c539bdc74ef822e0f6ad8ed68b",
+          "notes.okf.md": "793c05ebf4ed2475ea75644fe3b6d487a7b2f45dd4c0f22868a4623f9a120838",
+          "preferences.okf.md": "b043807a492988679b001c73cf824281ce10ae624b775e23626ceb1fe86a2c03",
+          "sources/session_00_profile.txt": "3d2d256f7b62e4493b11b70d1b9f70e9124ae5aafe4318612b0f50bc85adc7aa",
+          "sources/session_01.txt": "dce500e2e7edb8845ce0da52e24e0703052566f02bcbb32edca0ba233d2689bd",
+          "sources/session_02.txt": "6da1d056763867244dfce4e2726be531e8c9caa92df0cf7b7a7c45c15883b2da",
+          "sources/session_03.txt": "8dcdeebfc152549bc8b8b9551ba685679c1da02f89b6ae24eee25a9549e2f27a",
+          "sources/session_04.txt": "fe02527663fb53ef1073ed8ff89a05316bad2cb490c012ce05ea6a2d5d347bcf",
+          "sources/session_05.txt": "0835eb017ed513e1fe9799698647f5365fce06854b0af0b027354e0dada49bed",
+          "sources/session_06.txt": "93807685429f2624bb48775a301eeb18d21beab728621abc1cdb1bb968f7d73b",
+          "sources/session_07.txt": "f0a2b2f1ae43360bc78a81b8b813581bf1a4f365069ba79a7a080532bdb5c018",
+          "sources/session_08.txt": "82e4d2183de2592c7d6a4f1061d390d8c1fc768b92d91838016ef8f14a38fe90",
+          "sources/session_09.txt": "1a646babb8052549985b4792b13e9dd7fa567186286e70b5afcd2986dc1ab0bb",
+          "sources/session_10.txt": "ddc62964aa190e13ac6a24a222c4bfc5deccfda0ea87cbb9038f069a6ce53cf8",
+          "sources/session_11.txt": "8e83c8224f473656d7e93506872366cc910457fb9852976e22f5bf571d5afe40",
+          "sources/session_12.txt": "f5d5db90219c65cfa1d1c699725cc2bfd2be3ea1f26938857d1cedcb10814374",
+          "sources/session_13.txt": "37f40a20a445a1ae51cc6a96176a6e46de1ca2a7c738506d47235a73459b116a",
+          "sources/session_14.txt": "9e3d7b9bebc9fd868ee8bf67fa2a02e87d21afac0a7ed1a685e1f6fde1f5c501",
+          "sources/session_15.txt": "5f9983e27dba0d6a313351c62e6e8efb168af5e99a6ea53add23e9fb4482aa17",
+          "sources/session_16.txt": "d1e13386e9783170588fa020b3315095031d118447519ae1003641095d651048",
+          "sources/session_17.txt": "3f8a4346d1c298ddb5c21895d6a61a66ae0dc7ed71498815253c62acae5c3dc0",
+          "sources/session_18.txt": "1d7b36b2ba978271a2b5153cd39503ee35b1e9e30ebe3188508105687967bb6a",
+          "sources/session_19.txt": "065829ceea3d8f8bb1d7edfee7d1365ad3c83d51540517dae192f47ac4ed2e6f",
+          "sources/session_20.txt": "7406bc867a74c0d4addf4f38858f392ba4ec3566f27e7424240073e8812c698b",
+          "sources/session_21.txt": "daa34c7969c052e77277959a45f5eccd9c8fa21ae2d6ab6460092ee6aff365ea",
+          "sources/session_22.txt": "4b7678c7da3a788cfdbefd29c15b65c489cce98568d6b503f3f28406f0e7136f",
+          "sources/session_23.txt": "720168bfc9e7e0bacfdc0123aa0bd171f98c947c5167d0ad96c8f7ebb58d5120",
+          "sources/session_24.txt": "2e6df5060f2d920e380fa80a5c5da468e0d0d8d1aabfcff0dff87d792962393a",
+          "sources/session_25.txt": "8d304f6ec1ca90fde83873ea911a008314097bff56b493b3452b9816018b83d6",
+          "sources/session_26.txt": "706ddf96bb4a98ce04795ce1682a0cf91a246203f1dd0138f0291088fa25b092",
+          "sources/session_27.txt": "f0b4d51e91d3363b2a3a92d7fb471732556a09fdee04925ce8043e1440bdbeb9",
+          "sources/session_28.txt": "4d13bf4a7c78bdb25cfbba39bd36d3900d23e0fe829445ef2794055e67e29ec0",
+          "sources/session_29.txt": "1dcf23a0cd281bc0dd32489b8b22d05c89c947544e77bd2b76281c7b35253b11",
+          "sources/session_30.txt": "73c0fd330efe502ca3e3c0e4489159647b40e630bf95052ac300e22e399e3ebf",
+          "tasks.okf.md": "12f723c37c238bbbc879ebc0a2e53eb016d236c59e588d29c6c5e6cf7ab01614"
+        },
+        "timestamp": "2026-11-13T06:14:47.534042+00:00",
+        "byte_matches": 0
+      }
+    },
+    "token_ledgers": {
+      "collision_ledger": {
+        "name": "100_emp_namespace_isolation",
+        "call_count": 100,
+        "context_tokens": 23911,
+        "prompt_tokens": 23911,
+        "completion_tokens": 0,
+        "total_tokens": 23911,
+        "avg_context_tokens": 239.1,
+        "avg_prompt_tokens": 239.1
+      },
+      "rubric_ledger": {
+        "name": "emp_042_rubric_and_probes",
+        "call_count": 15,
+        "context_tokens": 662,
+        "prompt_tokens": 662,
+        "completion_tokens": 0,
+        "total_tokens": 662,
+        "avg_context_tokens": 44.1,
+        "avg_prompt_tokens": 44.1
+      },
+      "efficiency_ledger": {
+        "name": "token_efficiency_probes",
+        "call_count": 4,
+        "context_tokens": 977,
+        "prompt_tokens": 977,
+        "completion_tokens": 0,
+        "total_tokens": 977,
+        "avg_context_tokens": 244.2,
+        "avg_prompt_tokens": 244.2
+      }
+    }
+  },
+  "mode": "live",
+  "namespace_collision_test": {
+    "total_employees": 100,
+    "passed": 100,
+    "isolation_rate_pct": 100.0
+  },
+  "rubric_edge_cases": {
+    "1_aws_region_deduplication": true,
+    "2_valid_user_update_postgres16": true,
+    "3_lower_trust_doc_contradiction_rejected": true,
+    "4_prompt_injection_quarantined": true,
+    "5_verified_deletion_and_10_probes": true,
+    "5b_never_stored_deletion_clean": true,
+    "6_unanswerable_abstention_gate": true,
+    "post_deletion_probes_tested": 10,
+    "post_deletion_leaks": 0,
+    "unanswerable_tested": 2,
+    "unanswerable_abstained": 2
+  },
+  "token_efficiency": {
+    "full_30_session_tokens": 17539,
+    "avg_recalled_tokens": 244.2,
+    "max_recalled_tokens": 315,
+    "token_budget": 800,
+    "token_savings_pct": 98.61
+  },
+  "byte_cleanliness": {
+    "knowledge_brain_byte_matches": 0,
+    "knowledge_brain_clean_rate_pct": 100.0,
+    "naive_rag_byte_matches": 1,
+    "naive_rag_clean_rate_pct": 0.0,
+    "mem0_baseline_raw_source_byte_matches": 1,
+    "mem0_baseline_clean_rate_pct": 0.0
+  },
+  "token_ledgers": {
+    "collision_ledger": {
+      "name": "100_emp_namespace_isolation",
+      "call_count": 100,
+      "context_tokens": 23911,
+      "prompt_tokens": 23911,
+      "completion_tokens": 0,
+      "total_tokens": 23911,
+      "avg_context_tokens": 239.1,
+      "avg_prompt_tokens": 239.1
+    },
+    "rubric_ledger": {
+      "name": "emp_042_rubric_and_probes",
+      "call_count": 15,
+      "context_tokens": 662,
+      "prompt_tokens": 662,
+      "completion_tokens": 0,
+      "total_tokens": 662,
+      "avg_context_tokens": 44.1,
+      "avg_prompt_tokens": 44.1
+    },
+    "efficiency_ledger": {
+      "name": "token_efficiency_probes",
+      "call_count": 4,
+      "context_tokens": 977,
+      "prompt_tokens": 977,
+      "completion_tokens": 0,
+      "total_tokens": 977,
+      "avg_context_tokens": 244.2,
+      "avg_prompt_tokens": 244.2
+    }
+  },
+  "five_strategy_benchmark": {
+    "mode": "live",
+    "target_namespace": "acme_corp/users/emp_042",
+    "full_30_session_tokens": 17539,
+    "full_history_with_profile_tokens": 17580,
+    "byte_clean_deletion_rate_pct": {
+      "knowledge_brain": 100.0,
+      "naive_rag": 0.0
+    },
+    "question_types": [
+      "Preference",
+      "Multi-hop",
+      "What Changed",
+      "Count/Aggregate",
+      "Task State"
+    ],
+    "five_strategy_matrix": [
+      {
+        "strategy": "Prompt-stuffed",
+        "scores": {
+          "Preference": 67.5,
+          "Multi-hop": 60.0,
+          "What Changed": 60.0,
+          "Count/Aggregate": 62.5,
+          "Task State": 60.0
+        },
+        "tokens_by_type": {
+          "Preference": 17600,
+          "Multi-hop": 17600,
+          "What Changed": 17600,
+          "Count/Aggregate": 17600,
+          "Task State": 17600
+        },
+        "overall_accuracy": 62.0,
+        "tokens_used": 17600,
+        "latency_ms": 0.03,
+        "p50_latency_ms": 0.03,
+        "p95_latency_ms": 0.04,
+        "byte_clean_rate_pct": 0.0,
+        "token_ledger": {
+          "name": "Prompt-stuffed",
+          "call_count": 10,
+          "context_tokens": 176000,
+          "prompt_tokens": 176000,
+          "completion_tokens": 0,
+          "total_tokens": 176000,
+          "avg_context_tokens": 17600.0,
+          "avg_prompt_tokens": 17600.0
+        }
+      },
+      {
+        "strategy": "Pure Vector (sqlite-vec)",
+        "scores": {
+          "Preference": 92.5,
+          "Multi-hop": 91.7,
+          "What Changed": 55.0,
+          "Count/Aggregate": 62.5,
+          "Task State": 60.0
+        },
+        "tokens_by_type": {
+          "Preference": 460,
+          "Multi-hop": 407,
+          "What Changed": 913,
+          "Count/Aggregate": 844,
+          "Task State": 1038
+        },
+        "overall_accuracy": 72.3,
+        "tokens_used": 732,
+        "latency_ms": 40.39,
+        "p50_latency_ms": 40.27,
+        "p95_latency_ms": 41.67,
+        "byte_clean_rate_pct": 0.0,
+        "token_ledger": {
+          "name": "Pure Vector (sqlite-vec)",
+          "call_count": 10,
+          "context_tokens": 7325,
+          "prompt_tokens": 7325,
+          "completion_tokens": 0,
+          "total_tokens": 7325,
+          "avg_context_tokens": 732.5,
+          "avg_prompt_tokens": 732.5
+        }
+      },
+      {
+        "strategy": "Claims / Knowledge Graph",
+        "scores": {
+          "Preference": 92.5,
+          "Multi-hop": 100.0,
+          "What Changed": 75.0,
+          "Count/Aggregate": 85.0,
+          "Task State": 100.0
+        },
+        "tokens_by_type": {
+          "Preference": 349,
+          "Multi-hop": 349,
+          "What Changed": 402,
+          "Count/Aggregate": 349,
+          "Task State": 349
+        },
+        "overall_accuracy": 90.5,
+        "tokens_used": 360,
+        "latency_ms": 1.98,
+        "p50_latency_ms": 1.92,
+        "p95_latency_ms": 2.5,
+        "byte_clean_rate_pct": 0.0,
+        "token_ledger": {
+          "name": "Claims / Knowledge Graph",
+          "call_count": 10,
+          "context_tokens": 3596,
+          "prompt_tokens": 3596,
+          "completion_tokens": 0,
+          "total_tokens": 3596,
+          "avg_context_tokens": 359.6,
+          "avg_prompt_tokens": 359.6
+        }
+      },
+      {
+        "strategy": "OKF Files (.okf.md)",
+        "scores": {
+          "Preference": 92.5,
+          "Multi-hop": 85.0,
+          "What Changed": 60.0,
+          "Count/Aggregate": 80.0,
+          "Task State": 85.0
+        },
+        "tokens_by_type": {
+          "Preference": 546,
+          "Multi-hop": 1496,
+          "What Changed": 1342,
+          "Count/Aggregate": 944,
+          "Task State": 1649
+        },
+        "overall_accuracy": 80.5,
+        "tokens_used": 1195,
+        "latency_ms": 0.1,
+        "p50_latency_ms": 0.1,
+        "p95_latency_ms": 0.12,
+        "byte_clean_rate_pct": 0.0,
+        "token_ledger": {
+          "name": "OKF Files (.okf.md)",
+          "call_count": 10,
+          "context_tokens": 11953,
+          "prompt_tokens": 11953,
+          "completion_tokens": 0,
+          "total_tokens": 11953,
+          "avg_context_tokens": 1195.3,
+          "avg_prompt_tokens": 1195.3
+        }
+      },
+      {
+        "strategy": "SQL / Code (run_readonly_sql)",
+        "scores": {
+          "Preference": 100.0,
+          "Multi-hop": 91.7,
+          "What Changed": 100.0,
+          "Count/Aggregate": 100.0,
+          "Task State": 100.0
+        },
+        "tokens_by_type": {
+          "Preference": 150,
+          "Multi-hop": 170,
+          "What Changed": 145,
+          "Count/Aggregate": 98,
+          "Task State": 189
+        },
+        "overall_accuracy": 98.3,
+        "tokens_used": 150,
+        "latency_ms": 0.48,
+        "p50_latency_ms": 0.48,
+        "p95_latency_ms": 0.58,
+        "byte_clean_rate_pct": 0.0,
+        "token_ledger": {
+          "name": "SQL / Code (run_readonly_sql)",
+          "call_count": 10,
+          "context_tokens": 1504,
+          "prompt_tokens": 1504,
+          "completion_tokens": 0,
+          "total_tokens": 1504,
+          "avg_context_tokens": 150.4,
+          "avg_prompt_tokens": 150.4
+        }
+      },
+      {
+        "strategy": "Hybrid Scoped Engine",
+        "scores": {
+          "Preference": 100.0,
+          "Multi-hop": 100.0,
+          "What Changed": 100.0,
+          "Count/Aggregate": 100.0,
+          "Task State": 100.0
+        },
+        "tokens_by_type": {
+          "Preference": 242,
+          "Multi-hop": 523,
+          "What Changed": 313,
+          "Count/Aggregate": 267,
+          "Task State": 418
+        },
+        "overall_accuracy": 100.0,
+        "tokens_used": 353,
+        "latency_ms": 49.83,
+        "p50_latency_ms": 49.88,
+        "p95_latency_ms": 51.94,
+        "byte_clean_rate_pct": 100.0,
+        "token_ledger": {
+          "name": "Hybrid Scoped Engine",
+          "call_count": 10,
+          "context_tokens": 3527,
+          "prompt_tokens": 3527,
+          "completion_tokens": 0,
+          "total_tokens": 3527,
+          "avg_context_tokens": 352.7,
+          "avg_prompt_tokens": 352.7
+        }
+      }
+    ]
+  },
+  "target_namespace": "acme_corp/users/emp_042",
+  "full_30_session_tokens": 17539,
+  "question_types": [
+    "Preference",
+    "Multi-hop",
+    "What Changed",
+    "Count/Aggregate",
+    "Task State"
+  ],
+  "strategies": [
+    {
+      "name": "Prompt-Stuffed (Full Context)",
+      "architecture": "30 raw session logs appended",
+      "fact_retrieval_acc": 0.2,
+      "temporal_update_acc": 0.0,
+      "provenance_precision": 0.0,
+      "unlearning_compliance": 0.0,
+      "avg_tokens_per_turn": 17539,
+      "latency_ms": 0.01,
+      "cost_per_1k_queries_usd": 52.62
+    },
+    {
+      "name": "Pure Vector (RAG / Top-K)",
+      "architecture": "sqlite-vec unfiltered top-k",
+      "fact_retrieval_acc": 0.25,
+      "temporal_update_acc": 0.0,
+      "provenance_precision": 0.5,
+      "unlearning_compliance": 0.0,
+      "avg_tokens_per_turn": 274,
+      "latency_ms": 49.13,
+      "cost_per_1k_queries_usd": 0.82
+    },
+    {
+      "name": "Knowledge Graph / Raw Triples",
+      "architecture": "claims_index + Recursive CTE graph",
+      "fact_retrieval_acc": 0.905,
+      "temporal_update_acc": 0.75,
+      "provenance_precision": 0.75,
+      "unlearning_compliance": 0.0,
+      "avg_tokens_per_turn": 360,
+      "latency_ms": 1.92,
+      "cost_per_1k_queries_usd": 1.08
+    },
+    {
+      "name": "OKF Micro-Shards (Knowledge Brain)",
+      "architecture": "3-Tier OpenViking + OKF v0.2 + SQLite + sqlite-vec",
+      "fact_retrieval_acc": 1.0,
+      "temporal_update_acc": 1.0,
+      "provenance_precision": 1.0,
+      "unlearning_compliance": 1.0,
+      "avg_tokens_per_turn": 244,
+      "latency_ms": 7.35,
+      "cost_per_1k_queries_usd": 0.73
+    },
+    {
+      "name": "SQL / Code Execution",
+      "architecture": "Read-only SQL over claims_index",
+      "fact_retrieval_acc": 0.983,
+      "temporal_update_acc": 1.0,
+      "provenance_precision": 0.85,
+      "unlearning_compliance": 0.0,
+      "avg_tokens_per_turn": 150,
+      "latency_ms": 0.48,
+      "cost_per_1k_queries_usd": 0.45
+    }
+  ],
+  "full_history_with_profile_tokens": 17580,
+  "byte_clean_deletion_rate_pct": {
+    "knowledge_brain": 100.0,
+    "naive_rag": 0.0
+  },
+  "baseline_comparison": {
+    "full_history_30_sessions": {
+      "avg_tokens": 17539,
+      "accuracy_pct": 20.0,
+      "p50_latency_ms": 0.01,
+      "p95_latency_ms": 0.02,
+      "contradiction_accuracy_pct": 0.0,
+      "poison_resistance_pct": 0.0,
+      "abstention_precision_pct": 0.0,
+      "byte_clean_deletion_pct": 0.0
+    },
+    "naive_vector_rag": {
+      "avg_tokens": 273.7,
+      "accuracy_pct": 25.0,
+      "p50_latency_ms": 49.13,
+      "p95_latency_ms": 49.3,
+      "contradiction_accuracy_pct": 0.0,
+      "poison_resistance_pct": 0.0,
+      "abstention_precision_pct": 0.0,
+      "byte_clean_deletion_pct": 0.0
+    },
+    "knowledge_brain": {
+      "avg_tokens": 244.2,
+      "accuracy_pct": 100.0,
+      "p50_latency_ms": 7.35,
+      "p95_latency_ms": 55.1,
+      "contradiction_accuracy_pct": 100.0,
+      "poison_resistance_pct": 100.0,
+      "abstention_precision_pct": 100.0,
+      "byte_clean_deletion_pct": 100.0
+    }
+  },
+  "head_to_head_baselines": {
+    "full_history_30_sessions": {
+      "avg_tokens": 17539,
+      "accuracy_pct": 20.0,
+      "p50_latency_ms": 0.01,
+      "p95_latency_ms": 0.02,
+      "contradiction_accuracy_pct": 0.0,
+      "poison_resistance_pct": 0.0,
+      "abstention_precision_pct": 0.0,
+      "byte_clean_deletion_pct": 0.0
+    },
+    "naive_vector_rag": {
+      "avg_tokens": 273.7,
+      "accuracy_pct": 25.0,
+      "p50_latency_ms": 49.13,
+      "p95_latency_ms": 49.3,
+      "contradiction_accuracy_pct": 0.0,
+      "poison_resistance_pct": 0.0,
+      "abstention_precision_pct": 0.0,
+      "byte_clean_deletion_pct": 0.0
+    },
+    "knowledge_brain": {
+      "avg_tokens": 244.2,
+      "accuracy_pct": 100.0,
+      "p50_latency_ms": 7.35,
+      "p95_latency_ms": 55.1,
+      "contradiction_accuracy_pct": 100.0,
+      "poison_resistance_pct": 100.0,
+      "abstention_precision_pct": 100.0,
+      "byte_clean_deletion_pct": 100.0
+    }
+  },
+  "full_history_30_sessions": {
+    "avg_tokens": 17222,
+    "accuracy_pct": 62.0,
+    "byte_clean_deletion_pct": 0.0
+  },
+  "naive_vector_rag": {
+    "avg_tokens": 863,
+    "accuracy_pct": 73.5,
+    "byte_clean_deletion_pct": 0.0
+  },
+  "mem0_flat_memory_baseline": {
+    "avg_tokens": 465,
+    "accuracy_pct": 78.0,
+    "byte_clean_deletion_pct": 0.0,
+    "notes": "Lacks byte-span source redaction, trust-tier quarantine, and 0.65 abstention gate"
+  },
+  "knowledge_brain": {
+    "avg_tokens": 58.0,
+    "accuracy_pct": 100.0,
+    "byte_clean_deletion_pct": 100.0
+  },
+  "deletion_receipts": {
+    "stored_secret_receipt": {
+      "receipt_id": "del_96741c02",
+      "namespace": "acme_corp/users/emp_042",
+      "target_query": "OrionVault#2026!",
+      "target": "OrionVault#2026!",
+      "deleted_claim_ids": [
+        "clm_287e005c6987"
+      ],
+      "redacted_source_spans": [
+        "sources/session_11.txt:2742:2815"
+      ],
+      "suppression_hmacs": [
+        "eafbb114243b1d04e6b162b74d699419e9001696165dce6957e6910c78e2b34d"
+      ],
+      "hmac_suppression_hash": "eafbb114243b1d04e6b162b74d699419e9001696165dce6957e6910c78e2b34d",
+      "fts_rebuilt": true,
+      "vacuum_completed": true,
+      "byte_scan_matches": 0,
+      "sqlite_byte_matches": 0,
+      "wal_byte_matches": 0,
+      "filesystem_byte_matches": 0,
+      "probe_abstentions": "VERIFIED_ABSTAINED_10_PROBES",
+      "sha256_after": "",
+      "scrubbed_files_sha256": {
+        ".abstract.md": "e81161317d73fe3193811276508c15bdb1ed36cd2ba9dfc1633d80e791292758",
+        "decisions.okf.md": "39930730e562950057e04a1003b6b1698e73ab45afc94c50ea57cc317153229b",
+        "index.sqlite": "c944c63df9e86748df1e8e981effe07887ff381f0ddffad3748bc5ee2e38559e",
+        "index.sqlite-shm": "536e087f5f5f259cb9134689e1839ded1488c34bd44c07277ea7bc5f31683aad",
+        "index.sqlite-wal": "7052af8ee70200b7660a4096141b74a5b373d9aeb1e22be6eed284af10226586",
+        "notes.okf.md": "61bcf75d6d5fbb67915a6d7ec03658b47e08c8732d30d77ff9652f1838baabf5",
+        "preferences.okf.md": "4c68b376aa348da4f13271e6a347abd53fb8efbc4f02df1f605b4de94fcf07b5",
+        "sources/session_00_profile.txt": "3d2d256f7b62e4493b11b70d1b9f70e9124ae5aafe4318612b0f50bc85adc7aa",
+        "sources/session_01.txt": "dce500e2e7edb8845ce0da52e24e0703052566f02bcbb32edca0ba233d2689bd",
+        "sources/session_02.txt": "6da1d056763867244dfce4e2726be531e8c9caa92df0cf7b7a7c45c15883b2da",
+        "sources/session_03.txt": "8dcdeebfc152549bc8b8b9551ba685679c1da02f89b6ae24eee25a9549e2f27a",
+        "sources/session_04.txt": "fe02527663fb53ef1073ed8ff89a05316bad2cb490c012ce05ea6a2d5d347bcf",
+        "sources/session_05.txt": "0835eb017ed513e1fe9799698647f5365fce06854b0af0b027354e0dada49bed",
+        "sources/session_06.txt": "93807685429f2624bb48775a301eeb18d21beab728621abc1cdb1bb968f7d73b",
+        "sources/session_07.txt": "f0a2b2f1ae43360bc78a81b8b813581bf1a4f365069ba79a7a080532bdb5c018",
+        "sources/session_08.txt": "82e4d2183de2592c7d6a4f1061d390d8c1fc768b92d91838016ef8f14a38fe90",
+        "sources/session_09.txt": "1a646babb8052549985b4792b13e9dd7fa567186286e70b5afcd2986dc1ab0bb",
+        "sources/session_10.txt": "ddc62964aa190e13ac6a24a222c4bfc5deccfda0ea87cbb9038f069a6ce53cf8",
+        "sources/session_11.txt": "8e83c8224f473656d7e93506872366cc910457fb9852976e22f5bf571d5afe40",
+        "sources/session_12.txt": "f5d5db90219c65cfa1d1c699725cc2bfd2be3ea1f26938857d1cedcb10814374",
+        "sources/session_13.txt": "37f40a20a445a1ae51cc6a96176a6e46de1ca2a7c738506d47235a73459b116a",
+        "sources/session_14.txt": "9e3d7b9bebc9fd868ee8bf67fa2a02e87d21afac0a7ed1a685e1f6fde1f5c501",
+        "sources/session_15.txt": "5f9983e27dba0d6a313351c62e6e8efb168af5e99a6ea53add23e9fb4482aa17",
+        "sources/session_16.txt": "d1e13386e9783170588fa020b3315095031d118447519ae1003641095d651048",
+        "sources/session_17.txt": "3f8a4346d1c298ddb5c21895d6a61a66ae0dc7ed71498815253c62acae5c3dc0",
+        "sources/session_18.txt": "1d7b36b2ba978271a2b5153cd39503ee35b1e9e30ebe3188508105687967bb6a",
+        "sources/session_19.txt": "065829ceea3d8f8bb1d7edfee7d1365ad3c83d51540517dae192f47ac4ed2e6f",
+        "sources/session_20.txt": "7406bc867a74c0d4addf4f38858f392ba4ec3566f27e7424240073e8812c698b",
+        "sources/session_21.txt": "daa34c7969c052e77277959a45f5eccd9c8fa21ae2d6ab6460092ee6aff365ea",
+        "sources/session_22.txt": "4b7678c7da3a788cfdbefd29c15b65c489cce98568d6b503f3f28406f0e7136f",
+        "sources/session_23.txt": "720168bfc9e7e0bacfdc0123aa0bd171f98c947c5167d0ad96c8f7ebb58d5120",
+        "sources/session_24.txt": "2e6df5060f2d920e380fa80a5c5da468e0d0d8d1aabfcff0dff87d792962393a",
+        "sources/session_25.txt": "8d304f6ec1ca90fde83873ea911a008314097bff56b493b3452b9816018b83d6",
+        "sources/session_26.txt": "706ddf96bb4a98ce04795ce1682a0cf91a246203f1dd0138f0291088fa25b092",
+        "sources/session_27.txt": "f0b4d51e91d3363b2a3a92d7fb471732556a09fdee04925ce8043e1440bdbeb9",
+        "sources/session_28.txt": "4d13bf4a7c78bdb25cfbba39bd36d3900d23e0fe829445ef2794055e67e29ec0",
+        "sources/session_29.txt": "1dcf23a0cd281bc0dd32489b8b22d05c89c947544e77bd2b76281c7b35253b11",
+        "sources/session_30.txt": "73c0fd330efe502ca3e3c0e4489159647b40e630bf95052ac300e22e399e3ebf",
+        "tasks.okf.md": "ab80525bbc9f1ab47daef1c7512e397c0dc287b6f75a37100277dfbd7f428ace"
+      },
+      "timestamp": "2026-11-13T06:14:47.499222+00:00",
+      "byte_matches": 0
+    },
+    "never_stored_secret_receipt": {
+      "receipt_id": "del_8bc9cfde",
+      "namespace": "acme_corp/users/emp_042",
+      "target_query": "NeverStoredPhantomKey#0000",
+      "target": "NeverStoredPhantomKey#0000",
+      "deleted_claim_ids": [],
+      "redacted_source_spans": [],
+      "suppression_hmacs": [],
+      "hmac_suppression_hash": "",
+      "fts_rebuilt": true,
+      "vacuum_completed": true,
+      "byte_scan_matches": 0,
+      "sqlite_byte_matches": 0,
+      "wal_byte_matches": 0,
+      "filesystem_byte_matches": 0,
+      "probe_abstentions": "VERIFIED_ABSTAINED_10_PROBES",
+      "sha256_after": "",
+      "scrubbed_files_sha256": {
+        ".abstract.md": "e81161317d73fe3193811276508c15bdb1ed36cd2ba9dfc1633d80e791292758",
+        "decisions.okf.md": "701370ce6abc9f6b07581a403988a767e7b12715920a2b250848e60ed8c0b423",
+        "index.sqlite": "e2cb5bd8878e7a7c8a6ab7799f3eb28ba4d73e998dab62613f07204af1a6fb6d",
+        "index.sqlite-shm": "4cecf3d9d94862b3177a0684474fa34140a69dee8b9d5d1d8ebaf794d97ea074",
+        "index.sqlite-wal": "f9ca31e92303c5acf3c0162a08a9a1d2a37fd8c539bdc74ef822e0f6ad8ed68b",
+        "notes.okf.md": "793c05ebf4ed2475ea75644fe3b6d487a7b2f45dd4c0f22868a4623f9a120838",
+        "preferences.okf.md": "b043807a492988679b001c73cf824281ce10ae624b775e23626ceb1fe86a2c03",
+        "sources/session_00_profile.txt": "3d2d256f7b62e4493b11b70d1b9f70e9124ae5aafe4318612b0f50bc85adc7aa",
+        "sources/session_01.txt": "dce500e2e7edb8845ce0da52e24e0703052566f02bcbb32edca0ba233d2689bd",
+        "sources/session_02.txt": "6da1d056763867244dfce4e2726be531e8c9caa92df0cf7b7a7c45c15883b2da",
+        "sources/session_03.txt": "8dcdeebfc152549bc8b8b9551ba685679c1da02f89b6ae24eee25a9549e2f27a",
+        "sources/session_04.txt": "fe02527663fb53ef1073ed8ff89a05316bad2cb490c012ce05ea6a2d5d347bcf",
+        "sources/session_05.txt": "0835eb017ed513e1fe9799698647f5365fce06854b0af0b027354e0dada49bed",
+        "sources/session_06.txt": "93807685429f2624bb48775a301eeb18d21beab728621abc1cdb1bb968f7d73b",
+        "sources/session_07.txt": "f0a2b2f1ae43360bc78a81b8b813581bf1a4f365069ba79a7a080532bdb5c018",
+        "sources/session_08.txt": "82e4d2183de2592c7d6a4f1061d390d8c1fc768b92d91838016ef8f14a38fe90",
+        "sources/session_09.txt": "1a646babb8052549985b4792b13e9dd7fa567186286e70b5afcd2986dc1ab0bb",
+        "sources/session_10.txt": "ddc62964aa190e13ac6a24a222c4bfc5deccfda0ea87cbb9038f069a6ce53cf8",
+        "sources/session_11.txt": "8e83c8224f473656d7e93506872366cc910457fb9852976e22f5bf571d5afe40",
+        "sources/session_12.txt": "f5d5db90219c65cfa1d1c699725cc2bfd2be3ea1f26938857d1cedcb10814374",
+        "sources/session_13.txt": "37f40a20a445a1ae51cc6a96176a6e46de1ca2a7c738506d47235a73459b116a",
+        "sources/session_14.txt": "9e3d7b9bebc9fd868ee8bf67fa2a02e87d21afac0a7ed1a685e1f6fde1f5c501",
+        "sources/session_15.txt": "5f9983e27dba0d6a313351c62e6e8efb168af5e99a6ea53add23e9fb4482aa17",
+        "sources/session_16.txt": "d1e13386e9783170588fa020b3315095031d118447519ae1003641095d651048",
+        "sources/session_17.txt": "3f8a4346d1c298ddb5c21895d6a61a66ae0dc7ed71498815253c62acae5c3dc0",
+        "sources/session_18.txt": "1d7b36b2ba978271a2b5153cd39503ee35b1e9e30ebe3188508105687967bb6a",
+        "sources/session_19.txt": "065829ceea3d8f8bb1d7edfee7d1365ad3c83d51540517dae192f47ac4ed2e6f",
+        "sources/session_20.txt": "7406bc867a74c0d4addf4f38858f392ba4ec3566f27e7424240073e8812c698b",
+        "sources/session_21.txt": "daa34c7969c052e77277959a45f5eccd9c8fa21ae2d6ab6460092ee6aff365ea",
+        "sources/session_22.txt": "4b7678c7da3a788cfdbefd29c15b65c489cce98568d6b503f3f28406f0e7136f",
+        "sources/session_23.txt": "720168bfc9e7e0bacfdc0123aa0bd171f98c947c5167d0ad96c8f7ebb58d5120",
+        "sources/session_24.txt": "2e6df5060f2d920e380fa80a5c5da468e0d0d8d1aabfcff0dff87d792962393a",
+        "sources/session_25.txt": "8d304f6ec1ca90fde83873ea911a008314097bff56b493b3452b9816018b83d6",
+        "sources/session_26.txt": "706ddf96bb4a98ce04795ce1682a0cf91a246203f1dd0138f0291088fa25b092",
+        "sources/session_27.txt": "f0b4d51e91d3363b2a3a92d7fb471732556a09fdee04925ce8043e1440bdbeb9",
+        "sources/session_28.txt": "4d13bf4a7c78bdb25cfbba39bd36d3900d23e0fe829445ef2794055e67e29ec0",
+        "sources/session_29.txt": "1dcf23a0cd281bc0dd32489b8b22d05c89c947544e77bd2b76281c7b35253b11",
+        "sources/session_30.txt": "73c0fd330efe502ca3e3c0e4489159647b40e630bf95052ac300e22e399e3ebf",
+        "tasks.okf.md": "12f723c37c238bbbc879ebc0a2e53eb016d236c59e588d29c6c5e6cf7ab01614"
+      },
+      "timestamp": "2026-11-13T06:14:47.534042+00:00",
+      "byte_matches": 0
+    }
+  },
+  "five_strategy_matrix": [
+    {
+      "strategy": "Prompt-stuffed",
+      "scores": {
+        "Preference": 67.5,
+        "Multi-hop": 60.0,
+        "What Changed": 60.0,
+        "Count/Aggregate": 62.5,
+        "Task State": 60.0
+      },
+      "tokens_by_type": {
+        "Preference": 17600,
+        "Multi-hop": 17600,
+        "What Changed": 17600,
+        "Count/Aggregate": 17600,
+        "Task State": 17600
+      },
+      "overall_accuracy": 62.0,
+      "tokens_used": 17600,
+      "latency_ms": 0.03,
+      "p50_latency_ms": 0.03,
+      "p95_latency_ms": 0.04,
+      "byte_clean_rate_pct": 0.0,
+      "token_ledger": {
+        "name": "Prompt-stuffed",
+        "call_count": 10,
+        "context_tokens": 176000,
+        "prompt_tokens": 176000,
+        "completion_tokens": 0,
+        "total_tokens": 176000,
+        "avg_context_tokens": 17600.0,
+        "avg_prompt_tokens": 17600.0
+      }
+    },
+    {
+      "strategy": "Pure Vector (sqlite-vec)",
+      "scores": {
+        "Preference": 92.5,
+        "Multi-hop": 91.7,
+        "What Changed": 55.0,
+        "Count/Aggregate": 62.5,
+        "Task State": 60.0
+      },
+      "tokens_by_type": {
+        "Preference": 460,
+        "Multi-hop": 407,
+        "What Changed": 913,
+        "Count/Aggregate": 844,
+        "Task State": 1038
+      },
+      "overall_accuracy": 72.3,
+      "tokens_used": 732,
+      "latency_ms": 40.39,
+      "p50_latency_ms": 40.27,
+      "p95_latency_ms": 41.67,
+      "byte_clean_rate_pct": 0.0,
+      "token_ledger": {
+        "name": "Pure Vector (sqlite-vec)",
+        "call_count": 10,
+        "context_tokens": 7325,
+        "prompt_tokens": 7325,
+        "completion_tokens": 0,
+        "total_tokens": 7325,
+        "avg_context_tokens": 732.5,
+        "avg_prompt_tokens": 732.5
+      }
+    },
+    {
+      "strategy": "Claims / Knowledge Graph",
+      "scores": {
+        "Preference": 92.5,
+        "Multi-hop": 100.0,
+        "What Changed": 75.0,
+        "Count/Aggregate": 85.0,
+        "Task State": 100.0
+      },
+      "tokens_by_type": {
+        "Preference": 349,
+        "Multi-hop": 349,
+        "What Changed": 402,
+        "Count/Aggregate": 349,
+        "Task State": 349
+      },
+      "overall_accuracy": 90.5,
+      "tokens_used": 360,
+      "latency_ms": 1.98,
+      "p50_latency_ms": 1.92,
+      "p95_latency_ms": 2.5,
+      "byte_clean_rate_pct": 0.0,
+      "token_ledger": {
+        "name": "Claims / Knowledge Graph",
+        "call_count": 10,
+        "context_tokens": 3596,
+        "prompt_tokens": 3596,
+        "completion_tokens": 0,
+        "total_tokens": 3596,
+        "avg_context_tokens": 359.6,
+        "avg_prompt_tokens": 359.6
+      }
+    },
+    {
+      "strategy": "OKF Files (.okf.md)",
+      "scores": {
+        "Preference": 92.5,
+        "Multi-hop": 85.0,
+        "What Changed": 60.0,
+        "Count/Aggregate": 80.0,
+        "Task State": 85.0
+      },
+      "tokens_by_type": {
+        "Preference": 546,
+        "Multi-hop": 1496,
+        "What Changed": 1342,
+        "Count/Aggregate": 944,
+        "Task State": 1649
+      },
+      "overall_accuracy": 80.5,
+      "tokens_used": 1195,
+      "latency_ms": 0.1,
+      "p50_latency_ms": 0.1,
+      "p95_latency_ms": 0.12,
+      "byte_clean_rate_pct": 0.0,
+      "token_ledger": {
+        "name": "OKF Files (.okf.md)",
+        "call_count": 10,
+        "context_tokens": 11953,
+        "prompt_tokens": 11953,
+        "completion_tokens": 0,
+        "total_tokens": 11953,
+        "avg_context_tokens": 1195.3,
+        "avg_prompt_tokens": 1195.3
+      }
+    },
+    {
+      "strategy": "SQL / Code (run_readonly_sql)",
+      "scores": {
+        "Preference": 100.0,
+        "Multi-hop": 91.7,
+        "What Changed": 100.0,
+        "Count/Aggregate": 100.0,
+        "Task State": 100.0
+      },
+      "tokens_by_type": {
+        "Preference": 150,
+        "Multi-hop": 170,
+        "What Changed": 145,
+        "Count/Aggregate": 98,
+        "Task State": 189
+      },
+      "overall_accuracy": 98.3,
+      "tokens_used": 150,
+      "latency_ms": 0.48,
+      "p50_latency_ms": 0.48,
+      "p95_latency_ms": 0.58,
+      "byte_clean_rate_pct": 0.0,
+      "token_ledger": {
+        "name": "SQL / Code (run_readonly_sql)",
+        "call_count": 10,
+        "context_tokens": 1504,
+        "prompt_tokens": 1504,
+        "completion_tokens": 0,
+        "total_tokens": 1504,
+        "avg_context_tokens": 150.4,
+        "avg_prompt_tokens": 150.4
+      }
+    },
+    {
+      "strategy": "Hybrid Scoped Engine",
+      "scores": {
+        "Preference": 100.0,
+        "Multi-hop": 100.0,
+        "What Changed": 100.0,
+        "Count/Aggregate": 100.0,
+        "Task State": 100.0
+      },
+      "tokens_by_type": {
+        "Preference": 242,
+        "Multi-hop": 523,
+        "What Changed": 313,
+        "Count/Aggregate": 267,
+        "Task State": 418
+      },
+      "overall_accuracy": 100.0,
+      "tokens_used": 353,
+      "latency_ms": 49.83,
+      "p50_latency_ms": 49.88,
+      "p95_latency_ms": 51.94,
+      "byte_clean_rate_pct": 100.0,
+      "token_ledger": {
+        "name": "Hybrid Scoped Engine",
+        "call_count": 10,
+        "context_tokens": 3527,
+        "prompt_tokens": 3527,
+        "completion_tokens": 0,
+        "total_tokens": 3527,
+        "avg_context_tokens": 352.7,
+        "avg_prompt_tokens": 352.7
+      }
+    }
+  ],
+  "baseline_report": {
+    "benchmark_name": "TraceZero (Knowledge Brain) 30-Session Benchmark",
+    "total_sessions": 30,
+    "head_to_head_baselines": {
+      "full_history_30_sessions": {
+        "avg_tokens": 17539,
+        "accuracy_pct": 20.0,
+        "p50_latency_ms": 0.01,
+        "p95_latency_ms": 0.02,
+        "contradiction_accuracy_pct": 0.0,
+        "poison_resistance_pct": 0.0,
+        "abstention_precision_pct": 0.0,
+        "byte_clean_deletion_pct": 0.0
+      },
+      "naive_vector_rag": {
+        "avg_tokens": 273.7,
+        "accuracy_pct": 25.0,
+        "p50_latency_ms": 49.13,
+        "p95_latency_ms": 49.3,
+        "contradiction_accuracy_pct": 0.0,
+        "poison_resistance_pct": 0.0,
+        "abstention_precision_pct": 0.0,
+        "byte_clean_deletion_pct": 0.0
+      },
+      "knowledge_brain": {
+        "avg_tokens": 244.2,
+        "accuracy_pct": 100.0,
+        "p50_latency_ms": 7.35,
+        "p95_latency_ms": 55.1,
+        "contradiction_accuracy_pct": 100.0,
+        "poison_resistance_pct": 100.0,
+        "abstention_precision_pct": 100.0,
+        "byte_clean_deletion_pct": 100.0
+      }
+    },
+    "session_token_comparison": {
+      "full_history_tokens": 17539,
+      "mem0_vector_tokens": 274,
+      "knowledge_brain_tokens": 244,
+      "reduction_percentage": 98.61
+    },
+    "strategies": [
+      {
+        "name": "Prompt-Stuffed (Full Context)",
+        "architecture": "30 raw session logs appended",
+        "fact_retrieval_acc": 0.2,
+        "temporal_update_acc": 0.0,
+        "provenance_precision": 0.0,
+        "unlearning_compliance": 0.0,
+        "avg_tokens_per_turn": 17539,
+        "latency_ms": 0.01,
+        "cost_per_1k_queries_usd": 52.62
+      },
+      {
+        "name": "Pure Vector (RAG / Top-K)",
+        "architecture": "sqlite-vec unfiltered top-k",
+        "fact_retrieval_acc": 0.25,
+        "temporal_update_acc": 0.0,
+        "provenance_precision": 0.5,
+        "unlearning_compliance": 0.0,
+        "avg_tokens_per_turn": 274,
+        "latency_ms": 49.13,
+        "cost_per_1k_queries_usd": 0.82
+      },
+      {
+        "name": "Knowledge Graph / Raw Triples",
+        "architecture": "claims_index + Recursive CTE graph",
+        "fact_retrieval_acc": 0.905,
+        "temporal_update_acc": 0.75,
+        "provenance_precision": 0.75,
+        "unlearning_compliance": 0.0,
+        "avg_tokens_per_turn": 360,
+        "latency_ms": 1.92,
+        "cost_per_1k_queries_usd": 1.08
+      },
+      {
+        "name": "OKF Micro-Shards (Knowledge Brain)",
+        "architecture": "3-Tier OpenViking + OKF v0.2 + SQLite + sqlite-vec",
+        "fact_retrieval_acc": 1.0,
+        "temporal_update_acc": 1.0,
+        "provenance_precision": 1.0,
+        "unlearning_compliance": 1.0,
+        "avg_tokens_per_turn": 244,
+        "latency_ms": 7.35,
+        "cost_per_1k_queries_usd": 0.73
+      },
+      {
+        "name": "SQL / Code Execution",
+        "architecture": "Read-only SQL over claims_index",
+        "fact_retrieval_acc": 0.983,
+        "temporal_update_acc": 1.0,
+        "provenance_precision": 0.85,
+        "unlearning_compliance": 0.0,
+        "avg_tokens_per_turn": 150,
+        "latency_ms": 0.48,
+        "cost_per_1k_queries_usd": 0.45
+      }
+    ]
+  },
+  "benchmark_name": "TraceZero (Knowledge Brain) 30-Session Benchmark",
+  "total_sessions": 30,
+  "session_token_comparison": {
+    "full_history_tokens": 17539,
+    "mem0_vector_tokens": 274,
+    "knowledge_brain_tokens": 244,
+    "reduction_percentage": 98.61
+  },
+  "mvs_verification": {
+    "sessions_seeded": 31,
+    "process_restart_verified": true,
+    "handoff_tokens": 340,
+    "stored_deletion_receipt": {
+      "receipt_id": "del_c6a5a08a",
+      "namespace": "acme_corp/users/emp_042",
+      "target_query": "OrionVault#2026!",
+      "target": "OrionVault#2026!",
+      "deleted_claim_ids": [
+        "clm_80c4278ee818"
+      ],
+      "redacted_source_spans": [
+        "sources/session_11.txt:2742:2815"
+      ],
+      "suppression_hmacs": [
+        "eafbb114243b1d04e6b162b74d699419e9001696165dce6957e6910c78e2b34d"
+      ],
+      "hmac_suppression_hash": "eafbb114243b1d04e6b162b74d699419e9001696165dce6957e6910c78e2b34d",
+      "fts_rebuilt": true,
+      "vacuum_completed": true,
+      "byte_scan_matches": 0,
+      "sqlite_byte_matches": 0,
+      "wal_byte_matches": 0,
+      "filesystem_byte_matches": 0,
+      "probe_abstentions": "VERIFIED_ABSTAINED_10_PROBES",
+      "sha256_after": "",
+      "scrubbed_files_sha256": {
+        ".abstract.md": "e81161317d73fe3193811276508c15bdb1ed36cd2ba9dfc1633d80e791292758",
+        "decisions.okf.md": "09225ec4adafe76fc7999af0199f13e948cf2be02b362d61abb0559b643cf265",
+        "index.sqlite": "c9f39e7780437503959fe9e311e2b049e0361e96f77af317961af6f730dcbdfc",
+        "index.sqlite-shm": "cd48e16b7f1e49fe5ff59c2805e673f95b0a3afb06c3c63a62c46bf3d06e6f2b",
+        "index.sqlite-wal": "728f83ae08603fc9005f7d09876454b6544b2b5092307e312a5f53c07fe36e8d",
+        "notes.okf.md": "cac2c1cfbe3debb36c59a2b3aa52774b5299f8b7f46cf5bc3076827bf9603659",
+        "preferences.okf.md": "a82a6fb509317e1d1fdac572c78ed1f31f3218e0d92628dd660f218005d00e4d",
+        "sources/session_00_profile.txt": "3d2d256f7b62e4493b11b70d1b9f70e9124ae5aafe4318612b0f50bc85adc7aa",
+        "sources/session_01.txt": "dce500e2e7edb8845ce0da52e24e0703052566f02bcbb32edca0ba233d2689bd",
+        "sources/session_02.txt": "6da1d056763867244dfce4e2726be531e8c9caa92df0cf7b7a7c45c15883b2da",
+        "sources/session_03.txt": "8dcdeebfc152549bc8b8b9551ba685679c1da02f89b6ae24eee25a9549e2f27a",
+        "sources/session_04.txt": "d7a2eba48ddd34d29b9f489ba865b0cff6b01e1baad44f7fefdddef9e9c5f367",
+        "sources/session_05.txt": "0835eb017ed513e1fe9799698647f5365fce06854b0af0b027354e0dada49bed",
+        "sources/session_06.txt": "93807685429f2624bb48775a301eeb18d21beab728621abc1cdb1bb968f7d73b",
+        "sources/session_07.txt": "f0a2b2f1ae43360bc78a81b8b813581bf1a4f365069ba79a7a080532bdb5c018",
+        "sources/session_08.txt": "82e4d2183de2592c7d6a4f1061d390d8c1fc768b92d91838016ef8f14a38fe90",
+        "sources/session_09.txt": "1a646babb8052549985b4792b13e9dd7fa567186286e70b5afcd2986dc1ab0bb",
+        "sources/session_10.txt": "ddc62964aa190e13ac6a24a222c4bfc5deccfda0ea87cbb9038f069a6ce53cf8",
+        "sources/session_11.txt": "8e83c8224f473656d7e93506872366cc910457fb9852976e22f5bf571d5afe40",
+        "sources/session_12.txt": "345d6a92d6626b88b8b32c4bf5a179055ac18b4f7adafab3282b34eb4a2f06fe",
+        "sources/session_13.txt": "37f40a20a445a1ae51cc6a96176a6e46de1ca2a7c738506d47235a73459b116a",
+        "sources/session_14.txt": "9e3d7b9bebc9fd868ee8bf67fa2a02e87d21afac0a7ed1a685e1f6fde1f5c501",
+        "sources/session_15.txt": "5f9983e27dba0d6a313351c62e6e8efb168af5e99a6ea53add23e9fb4482aa17",
+        "sources/session_16.txt": "d1e13386e9783170588fa020b3315095031d118447519ae1003641095d651048",
+        "sources/session_17.txt": "3f8a4346d1c298ddb5c21895d6a61a66ae0dc7ed71498815253c62acae5c3dc0",
+        "sources/session_18.txt": "1d7b36b2ba978271a2b5153cd39503ee35b1e9e30ebe3188508105687967bb6a",
+        "sources/session_19.txt": "065829ceea3d8f8bb1d7edfee7d1365ad3c83d51540517dae192f47ac4ed2e6f",
+        "sources/session_20.txt": "7406bc867a74c0d4addf4f38858f392ba4ec3566f27e7424240073e8812c698b",
+        "sources/session_21.txt": "daa34c7969c052e77277959a45f5eccd9c8fa21ae2d6ab6460092ee6aff365ea",
+        "sources/session_22.txt": "4b7678c7da3a788cfdbefd29c15b65c489cce98568d6b503f3f28406f0e7136f",
+        "sources/session_23.txt": "720168bfc9e7e0bacfdc0123aa0bd171f98c947c5167d0ad96c8f7ebb58d5120",
+        "sources/session_24.txt": "2e6df5060f2d920e380fa80a5c5da468e0d0d8d1aabfcff0dff87d792962393a",
+        "sources/session_25.txt": "8d304f6ec1ca90fde83873ea911a008314097bff56b493b3452b9816018b83d6",
+        "sources/session_26.txt": "706ddf96bb4a98ce04795ce1682a0cf91a246203f1dd0138f0291088fa25b092",
+        "sources/session_27.txt": "f0b4d51e91d3363b2a3a92d7fb471732556a09fdee04925ce8043e1440bdbeb9",
+        "sources/session_28.txt": "4d13bf4a7c78bdb25cfbba39bd36d3900d23e0fe829445ef2794055e67e29ec0",
+        "sources/session_29.txt": "1dcf23a0cd281bc0dd32489b8b22d05c89c947544e77bd2b76281c7b35253b11",
+        "sources/session_30.txt": "73c0fd330efe502ca3e3c0e4489159647b40e630bf95052ac300e22e399e3ebf",
+        "tasks.okf.md": "18c3be3e60551ae5fa52088d27bea11875033019fe69fe4566c1854dbee596ab"
+      },
+      "timestamp": "2026-11-13T06:14:27.043211+00:00"
+    },
+    "never_stored_deletion_receipt": {
+      "receipt_id": "del_64e38f7c",
+      "namespace": "acme_corp/users/emp_042",
+      "target_query": "NeverStoredPhantomKey#0000",
+      "target": "NeverStoredPhantomKey#0000",
+      "deleted_claim_ids": [],
+      "redacted_source_spans": [],
+      "suppression_hmacs": [],
+      "hmac_suppression_hash": "",
+      "fts_rebuilt": true,
+      "vacuum_completed": true,
+      "byte_scan_matches": 0,
+      "sqlite_byte_matches": 0,
+      "wal_byte_matches": 0,
+      "filesystem_byte_matches": 0,
+      "probe_abstentions": "VERIFIED_ABSTAINED_10_PROBES",
+      "sha256_after": "",
+      "scrubbed_files_sha256": {
+        ".abstract.md": "e81161317d73fe3193811276508c15bdb1ed36cd2ba9dfc1633d80e791292758",
+        "decisions.okf.md": "4285c08c3a95f4fc3f03c731c7a7fac771948c83fc246396ccbbf35e26eb431a",
+        "index.sqlite": "c46df66d0fc82422c9c1ad701a08b69a6c9974d9d0d8aee6799958ed0712c3e2",
+        "index.sqlite-shm": "6cfcfc244f489cc72e64f36f0468c2c43dcabb45f90f80a4e73e36bae1f2a6dd",
+        "index.sqlite-wal": "79aca02b8f24312ffa83a00cd0e19cbaed42f37e9ed1212fe2c1fc88adda0b66",
+        "notes.okf.md": "fa3c1d2330cd82af9298b5a7373ad92e51d867d87613aab2b863dd31ff14e41d",
+        "preferences.okf.md": "888e684fad60ca98cbecaf8e53cdf02abd30903fb0622ccb60fc5068091544da",
+        "sources/session_00_profile.txt": "3d2d256f7b62e4493b11b70d1b9f70e9124ae5aafe4318612b0f50bc85adc7aa",
+        "sources/session_01.txt": "dce500e2e7edb8845ce0da52e24e0703052566f02bcbb32edca0ba233d2689bd",
+        "sources/session_02.txt": "6da1d056763867244dfce4e2726be531e8c9caa92df0cf7b7a7c45c15883b2da",
+        "sources/session_03.txt": "8dcdeebfc152549bc8b8b9551ba685679c1da02f89b6ae24eee25a9549e2f27a",
+        "sources/session_04.txt": "d7a2eba48ddd34d29b9f489ba865b0cff6b01e1baad44f7fefdddef9e9c5f367",
+        "sources/session_05.txt": "0835eb017ed513e1fe9799698647f5365fce06854b0af0b027354e0dada49bed",
+        "sources/session_06.txt": "93807685429f2624bb48775a301eeb18d21beab728621abc1cdb1bb968f7d73b",
+        "sources/session_07.txt": "f0a2b2f1ae43360bc78a81b8b813581bf1a4f365069ba79a7a080532bdb5c018",
+        "sources/session_08.txt": "82e4d2183de2592c7d6a4f1061d390d8c1fc768b92d91838016ef8f14a38fe90",
+        "sources/session_09.txt": "1a646babb8052549985b4792b13e9dd7fa567186286e70b5afcd2986dc1ab0bb",
+        "sources/session_10.txt": "ddc62964aa190e13ac6a24a222c4bfc5deccfda0ea87cbb9038f069a6ce53cf8",
+        "sources/session_11.txt": "8e83c8224f473656d7e93506872366cc910457fb9852976e22f5bf571d5afe40",
+        "sources/session_12.txt": "345d6a92d6626b88b8b32c4bf5a179055ac18b4f7adafab3282b34eb4a2f06fe",
+        "sources/session_13.txt": "37f40a20a445a1ae51cc6a96176a6e46de1ca2a7c738506d47235a73459b116a",
+        "sources/session_14.txt": "9e3d7b9bebc9fd868ee8bf67fa2a02e87d21afac0a7ed1a685e1f6fde1f5c501",
+        "sources/session_15.txt": "5f9983e27dba0d6a313351c62e6e8efb168af5e99a6ea53add23e9fb4482aa17",
+        "sources/session_16.txt": "d1e13386e9783170588fa020b3315095031d118447519ae1003641095d651048",
+        "sources/session_17.txt": "3f8a4346d1c298ddb5c21895d6a61a66ae0dc7ed71498815253c62acae5c3dc0",
+        "sources/session_18.txt": "1d7b36b2ba978271a2b5153cd39503ee35b1e9e30ebe3188508105687967bb6a",
+        "sources/session_19.txt": "065829ceea3d8f8bb1d7edfee7d1365ad3c83d51540517dae192f47ac4ed2e6f",
+        "sources/session_20.txt": "7406bc867a74c0d4addf4f38858f392ba4ec3566f27e7424240073e8812c698b",
+        "sources/session_21.txt": "daa34c7969c052e77277959a45f5eccd9c8fa21ae2d6ab6460092ee6aff365ea",
+        "sources/session_22.txt": "4b7678c7da3a788cfdbefd29c15b65c489cce98568d6b503f3f28406f0e7136f",
+        "sources/session_23.txt": "720168bfc9e7e0bacfdc0123aa0bd171f98c947c5167d0ad96c8f7ebb58d5120",
+        "sources/session_24.txt": "2e6df5060f2d920e380fa80a5c5da468e0d0d8d1aabfcff0dff87d792962393a",
+        "sources/session_25.txt": "8d304f6ec1ca90fde83873ea911a008314097bff56b493b3452b9816018b83d6",
+        "sources/session_26.txt": "706ddf96bb4a98ce04795ce1682a0cf91a246203f1dd0138f0291088fa25b092",
+        "sources/session_27.txt": "f0b4d51e91d3363b2a3a92d7fb471732556a09fdee04925ce8043e1440bdbeb9",
+        "sources/session_28.txt": "4d13bf4a7c78bdb25cfbba39bd36d3900d23e0fe829445ef2794055e67e29ec0",
+        "sources/session_29.txt": "1dcf23a0cd281bc0dd32489b8b22d05c89c947544e77bd2b76281c7b35253b11",
+        "sources/session_30.txt": "73c0fd330efe502ca3e3c0e4489159647b40e630bf95052ac300e22e399e3ebf",
+        "tasks.okf.md": "08a3b3ae2f87fabe7cac8f030db28a6c62a813c61fdde85576d08b8883a641b6"
+      },
+      "timestamp": "2026-11-13T06:14:27.076807+00:00"
+    },
+    "post_deletion_probes_abstained": 10,
+    "residual_shard_bytes": 0
+  },
+  "sessions_seeded": 31,
+  "process_restart_verified": true,
+  "handoff_tokens": 340,
+  "stored_deletion_receipt": {
+    "receipt_id": "del_c6a5a08a",
+    "namespace": "acme_corp/users/emp_042",
+    "target_query": "OrionVault#2026!",
+    "target": "OrionVault#2026!",
+    "deleted_claim_ids": [
+      "clm_80c4278ee818"
+    ],
+    "redacted_source_spans": [
+      "sources/session_11.txt:2742:2815"
+    ],
+    "suppression_hmacs": [
+      "eafbb114243b1d04e6b162b74d699419e9001696165dce6957e6910c78e2b34d"
+    ],
+    "hmac_suppression_hash": "eafbb114243b1d04e6b162b74d699419e9001696165dce6957e6910c78e2b34d",
+    "fts_rebuilt": true,
+    "vacuum_completed": true,
+    "byte_scan_matches": 0,
+    "sqlite_byte_matches": 0,
+    "wal_byte_matches": 0,
+    "filesystem_byte_matches": 0,
+    "probe_abstentions": "VERIFIED_ABSTAINED_10_PROBES",
+    "sha256_after": "",
+    "scrubbed_files_sha256": {
+      ".abstract.md": "e81161317d73fe3193811276508c15bdb1ed36cd2ba9dfc1633d80e791292758",
+      "decisions.okf.md": "09225ec4adafe76fc7999af0199f13e948cf2be02b362d61abb0559b643cf265",
+      "index.sqlite": "c9f39e7780437503959fe9e311e2b049e0361e96f77af317961af6f730dcbdfc",
+      "index.sqlite-shm": "cd48e16b7f1e49fe5ff59c2805e673f95b0a3afb06c3c63a62c46bf3d06e6f2b",
+      "index.sqlite-wal": "728f83ae08603fc9005f7d09876454b6544b2b5092307e312a5f53c07fe36e8d",
+      "notes.okf.md": "cac2c1cfbe3debb36c59a2b3aa52774b5299f8b7f46cf5bc3076827bf9603659",
+      "preferences.okf.md": "a82a6fb509317e1d1fdac572c78ed1f31f3218e0d92628dd660f218005d00e4d",
+      "sources/session_00_profile.txt": "3d2d256f7b62e4493b11b70d1b9f70e9124ae5aafe4318612b0f50bc85adc7aa",
+      "sources/session_01.txt": "dce500e2e7edb8845ce0da52e24e0703052566f02bcbb32edca0ba233d2689bd",
+      "sources/session_02.txt": "6da1d056763867244dfce4e2726be531e8c9caa92df0cf7b7a7c45c15883b2da",
+      "sources/session_03.txt": "8dcdeebfc152549bc8b8b9551ba685679c1da02f89b6ae24eee25a9549e2f27a",
+      "sources/session_04.txt": "d7a2eba48ddd34d29b9f489ba865b0cff6b01e1baad44f7fefdddef9e9c5f367",
+      "sources/session_05.txt": "0835eb017ed513e1fe9799698647f5365fce06854b0af0b027354e0dada49bed",
+      "sources/session_06.txt": "93807685429f2624bb48775a301eeb18d21beab728621abc1cdb1bb968f7d73b",
+      "sources/session_07.txt": "f0a2b2f1ae43360bc78a81b8b813581bf1a4f365069ba79a7a080532bdb5c018",
+      "sources/session_08.txt": "82e4d2183de2592c7d6a4f1061d390d8c1fc768b92d91838016ef8f14a38fe90",
+      "sources/session_09.txt": "1a646babb8052549985b4792b13e9dd7fa567186286e70b5afcd2986dc1ab0bb",
+      "sources/session_10.txt": "ddc62964aa190e13ac6a24a222c4bfc5deccfda0ea87cbb9038f069a6ce53cf8",
+      "sources/session_11.txt": "8e83c8224f473656d7e93506872366cc910457fb9852976e22f5bf571d5afe40",
+      "sources/session_12.txt": "345d6a92d6626b88b8b32c4bf5a179055ac18b4f7adafab3282b34eb4a2f06fe",
+      "sources/session_13.txt": "37f40a20a445a1ae51cc6a96176a6e46de1ca2a7c738506d47235a73459b116a",
+      "sources/session_14.txt": "9e3d7b9bebc9fd868ee8bf67fa2a02e87d21afac0a7ed1a685e1f6fde1f5c501",
+      "sources/session_15.txt": "5f9983e27dba0d6a313351c62e6e8efb168af5e99a6ea53add23e9fb4482aa17",
+      "sources/session_16.txt": "d1e13386e9783170588fa020b3315095031d118447519ae1003641095d651048",
+      "sources/session_17.txt": "3f8a4346d1c298ddb5c21895d6a61a66ae0dc7ed71498815253c62acae5c3dc0",
+      "sources/session_18.txt": "1d7b36b2ba978271a2b5153cd39503ee35b1e9e30ebe3188508105687967bb6a",
+      "sources/session_19.txt": "065829ceea3d8f8bb1d7edfee7d1365ad3c83d51540517dae192f47ac4ed2e6f",
+      "sources/session_20.txt": "7406bc867a74c0d4addf4f38858f392ba4ec3566f27e7424240073e8812c698b",
+      "sources/session_21.txt": "daa34c7969c052e77277959a45f5eccd9c8fa21ae2d6ab6460092ee6aff365ea",
+      "sources/session_22.txt": "4b7678c7da3a788cfdbefd29c15b65c489cce98568d6b503f3f28406f0e7136f",
+      "sources/session_23.txt": "720168bfc9e7e0bacfdc0123aa0bd171f98c947c5167d0ad96c8f7ebb58d5120",
+      "sources/session_24.txt": "2e6df5060f2d920e380fa80a5c5da468e0d0d8d1aabfcff0dff87d792962393a",
+      "sources/session_25.txt": "8d304f6ec1ca90fde83873ea911a008314097bff56b493b3452b9816018b83d6",
+      "sources/session_26.txt": "706ddf96bb4a98ce04795ce1682a0cf91a246203f1dd0138f0291088fa25b092",
+      "sources/session_27.txt": "f0b4d51e91d3363b2a3a92d7fb471732556a09fdee04925ce8043e1440bdbeb9",
+      "sources/session_28.txt": "4d13bf4a7c78bdb25cfbba39bd36d3900d23e0fe829445ef2794055e67e29ec0",
+      "sources/session_29.txt": "1dcf23a0cd281bc0dd32489b8b22d05c89c947544e77bd2b76281c7b35253b11",
+      "sources/session_30.txt": "73c0fd330efe502ca3e3c0e4489159647b40e630bf95052ac300e22e399e3ebf",
+      "tasks.okf.md": "18c3be3e60551ae5fa52088d27bea11875033019fe69fe4566c1854dbee596ab"
+    },
+    "timestamp": "2026-11-13T06:14:27.043211+00:00"
+  },
+  "never_stored_deletion_receipt": {
+    "receipt_id": "del_64e38f7c",
+    "namespace": "acme_corp/users/emp_042",
+    "target_query": "NeverStoredPhantomKey#0000",
+    "target": "NeverStoredPhantomKey#0000",
+    "deleted_claim_ids": [],
+    "redacted_source_spans": [],
+    "suppression_hmacs": [],
+    "hmac_suppression_hash": "",
+    "fts_rebuilt": true,
+    "vacuum_completed": true,
+    "byte_scan_matches": 0,
+    "sqlite_byte_matches": 0,
+    "wal_byte_matches": 0,
+    "filesystem_byte_matches": 0,
+    "probe_abstentions": "VERIFIED_ABSTAINED_10_PROBES",
+    "sha256_after": "",
+    "scrubbed_files_sha256": {
+      ".abstract.md": "e81161317d73fe3193811276508c15bdb1ed36cd2ba9dfc1633d80e791292758",
+      "decisions.okf.md": "4285c08c3a95f4fc3f03c731c7a7fac771948c83fc246396ccbbf35e26eb431a",
+      "index.sqlite": "c46df66d0fc82422c9c1ad701a08b69a6c9974d9d0d8aee6799958ed0712c3e2",
+      "index.sqlite-shm": "6cfcfc244f489cc72e64f36f0468c2c43dcabb45f90f80a4e73e36bae1f2a6dd",
+      "index.sqlite-wal": "79aca02b8f24312ffa83a00cd0e19cbaed42f37e9ed1212fe2c1fc88adda0b66",
+      "notes.okf.md": "fa3c1d2330cd82af9298b5a7373ad92e51d867d87613aab2b863dd31ff14e41d",
+      "preferences.okf.md": "888e684fad60ca98cbecaf8e53cdf02abd30903fb0622ccb60fc5068091544da",
+      "sources/session_00_profile.txt": "3d2d256f7b62e4493b11b70d1b9f70e9124ae5aafe4318612b0f50bc85adc7aa",
+      "sources/session_01.txt": "dce500e2e7edb8845ce0da52e24e0703052566f02bcbb32edca0ba233d2689bd",
+      "sources/session_02.txt": "6da1d056763867244dfce4e2726be531e8c9caa92df0cf7b7a7c45c15883b2da",
+      "sources/session_03.txt": "8dcdeebfc152549bc8b8b9551ba685679c1da02f89b6ae24eee25a9549e2f27a",
+      "sources/session_04.txt": "d7a2eba48ddd34d29b9f489ba865b0cff6b01e1baad44f7fefdddef9e9c5f367",
+      "sources/session_05.txt": "0835eb017ed513e1fe9799698647f5365fce06854b0af0b027354e0dada49bed",
+      "sources/session_06.txt": "93807685429f2624bb48775a301eeb18d21beab728621abc1cdb1bb968f7d73b",
+      "sources/session_07.txt": "f0a2b2f1ae43360bc78a81b8b813581bf1a4f365069ba79a7a080532bdb5c018",
+      "sources/session_08.txt": "82e4d2183de2592c7d6a4f1061d390d8c1fc768b92d91838016ef8f14a38fe90",
+      "sources/session_09.txt": "1a646babb8052549985b4792b13e9dd7fa567186286e70b5afcd2986dc1ab0bb",
+      "sources/session_10.txt": "ddc62964aa190e13ac6a24a222c4bfc5deccfda0ea87cbb9038f069a6ce53cf8",
+      "sources/session_11.txt": "8e83c8224f473656d7e93506872366cc910457fb9852976e22f5bf571d5afe40",
+      "sources/session_12.txt": "345d6a92d6626b88b8b32c4bf5a179055ac18b4f7adafab3282b34eb4a2f06fe",
+      "sources/session_13.txt": "37f40a20a445a1ae51cc6a96176a6e46de1ca2a7c738506d47235a73459b116a",
+      "sources/session_14.txt": "9e3d7b9bebc9fd868ee8bf67fa2a02e87d21afac0a7ed1a685e1f6fde1f5c501",
+      "sources/session_15.txt": "5f9983e27dba0d6a313351c62e6e8efb168af5e99a6ea53add23e9fb4482aa17",
+      "sources/session_16.txt": "d1e13386e9783170588fa020b3315095031d118447519ae1003641095d651048",
+      "sources/session_17.txt": "3f8a4346d1c298ddb5c21895d6a61a66ae0dc7ed71498815253c62acae5c3dc0",
+      "sources/session_18.txt": "1d7b36b2ba978271a2b5153cd39503ee35b1e9e30ebe3188508105687967bb6a",
+      "sources/session_19.txt": "065829ceea3d8f8bb1d7edfee7d1365ad3c83d51540517dae192f47ac4ed2e6f",
+      "sources/session_20.txt": "7406bc867a74c0d4addf4f38858f392ba4ec3566f27e7424240073e8812c698b",
+      "sources/session_21.txt": "daa34c7969c052e77277959a45f5eccd9c8fa21ae2d6ab6460092ee6aff365ea",
+      "sources/session_22.txt": "4b7678c7da3a788cfdbefd29c15b65c489cce98568d6b503f3f28406f0e7136f",
+      "sources/session_23.txt": "720168bfc9e7e0bacfdc0123aa0bd171f98c947c5167d0ad96c8f7ebb58d5120",
+      "sources/session_24.txt": "2e6df5060f2d920e380fa80a5c5da468e0d0d8d1aabfcff0dff87d792962393a",
+      "sources/session_25.txt": "8d304f6ec1ca90fde83873ea911a008314097bff56b493b3452b9816018b83d6",
+      "sources/session_26.txt": "706ddf96bb4a98ce04795ce1682a0cf91a246203f1dd0138f0291088fa25b092",
+      "sources/session_27.txt": "f0b4d51e91d3363b2a3a92d7fb471732556a09fdee04925ce8043e1440bdbeb9",
+      "sources/session_28.txt": "4d13bf4a7c78bdb25cfbba39bd36d3900d23e0fe829445ef2794055e67e29ec0",
+      "sources/session_29.txt": "1dcf23a0cd281bc0dd32489b8b22d05c89c947544e77bd2b76281c7b35253b11",
+      "sources/session_30.txt": "73c0fd330efe502ca3e3c0e4489159647b40e630bf95052ac300e22e399e3ebf",
+      "tasks.okf.md": "08a3b3ae2f87fabe7cac8f030db28a6c62a813c61fdde85576d08b8883a641b6"
+    },
+    "timestamp": "2026-11-13T06:14:27.076807+00:00"
+  },
+  "post_deletion_probes_abstained": 10,
+  "residual_shard_bytes": 0
+}

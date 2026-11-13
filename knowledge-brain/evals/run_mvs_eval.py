@@ -55,13 +55,15 @@ def run_mvs_eval(
         assert len(source_files) >= 30, f"Expected >=30 session files, found {len(source_files)}"
 
         # 2. Agent A creates mid-task OKF v0.2 handoff packet
+        db_exp = probes["db_update_expected"]
+        reg_exp = probes["aws_region_expected"]
         pkt = handoff_create(
             store=store,
             namespace=ns,
             task_id="mig_wave_30",
-            goal="Complete Project Atlas Postgres 16 cutover in us-west-2",
-            completed_steps=["Validate Postgres 16 schema parity", "Quarantine untrusted web override"],
-            pending_steps=["Switch production DNS records", "Decommission MongoDB 6.0"],
+            goal=f"Complete orion_payments {db_exp} cutover in {reg_exp}",
+            completed_steps=[f"Validate {db_exp} schema parity", "Quarantine untrusted web override"],
+            pending_steps=["Switch production DNS records to ap-south-1_az3", "Decommission PostgreSQL 14"],
             open_questions=["Confirm maintenance window for DNS cutover"],
             relied_on_claim_ids=[],
             agent_id="agent_a_claude",
@@ -84,11 +86,13 @@ def run_mvs_eval(
                 f"s = MemoryStore(root_dir={str(active_root)!r}); "
                 f"h = handoff_get(s, {ns!r}, 'mig_wave_30'); "
                 f"r = recall_context(s, {ns!r}, 'What is our primary database engine?', token_budget=800); "
-                "g = s.query_graph_multihop(" + repr(ns) + ", 'emp_042', max_hops=3); "
+                "g = s.query_graph_multihop(" + repr(ns) + ", 'emp_042', max_hops=4); "
+                "g_arch = s.query_graph_multihop(" + repr(ns) + ", 'orion_payments', max_hops=3); "
                 "assert h['status'] == 'ok'; "
                 "assert h['tokens_used'] < 350; "
-                "assert 'Postgres 16' in r.packed_prompt; "
-                "assert any(x['object_val'] == 'Postgres 16' for x in g); "
+                f"assert {db_exp!r} in r.packed_prompt; "
+                f"assert any(x['object_val'] == {db_exp!r} for x in g); "
+                "assert any(x['object_val'] == 'ap-south-1_az3' for x in g_arch); "
                 "print(json.dumps({'handoff_tokens': h['tokens_used'], 'recall_tokens': r.tokens_used, 'hops': len(g)}))"
             )
             proc = subprocess.run(
@@ -108,7 +112,7 @@ def run_mvs_eval(
             h = handoff_get(fresh_store, ns, "mig_wave_30")
             r = recall_context(fresh_store, ns, "What is our primary database engine?", token_budget=800)
             assert h["status"] == "ok" and h["tokens_used"] < 350
-            assert "Postgres 16" in r.packed_prompt
+            assert db_exp in r.packed_prompt
             agent_b_tokens = h["tokens_used"]
             restart_verified = True
 

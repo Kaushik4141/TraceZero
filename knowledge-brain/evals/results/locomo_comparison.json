@@ -1,0 +1,173 @@
+{
+  "sample_id": "conv-26",
+  "num_sessions": 19,
+  "num_qas": 199,
+  "results": [
+    {
+      "engine": "TraceZero",
+      "total_qas": 199,
+      "ingest_secs": 13.74,
+      "ingest_items": 419,
+      "overall_token_recall_pct": 45.17,
+      "overall_best_line_f1_pct": 20.28,
+      "overall_substring_hit_pct": 13.16,
+      "cat5_abstention_pct": 65.96,
+      "mean_context_tokens": 379.4,
+      "p50_latency_ms": 105.74,
+      "p95_latency_ms": 109.32,
+      "categories": {
+        "1": {
+          "name": "Single-Hop",
+          "count": 32,
+          "token_recall_pct": 40.18,
+          "best_line_f1_pct": 14.72,
+          "substring_hit_pct": 9.38
+        },
+        "2": {
+          "name": "Temporal",
+          "count": 37,
+          "token_recall_pct": 52.43,
+          "best_line_f1_pct": 22.86,
+          "substring_hit_pct": 5.41
+        },
+        "3": {
+          "name": "Multi-Hop",
+          "count": 13,
+          "token_recall_pct": 11.54,
+          "best_line_f1_pct": 7.92,
+          "substring_hit_pct": 0.0
+        },
+        "4": {
+          "name": "Open-Domain",
+          "count": 70,
+          "token_recall_pct": 49.86,
+          "best_line_f1_pct": 23.75,
+          "substring_hit_pct": 21.43
+        },
+        "5": {
+          "name": "Adversarial",
+          "count": 47,
+          "abstention_rate_pct": 65.96,
+          "adversarial_leak_pct": 14.89
+        }
+      },
+      "deletion_audit": {
+        "pre_delete_byte_matches": 4,
+        "post_delete_byte_matches": 0,
+        "receipt_byte_scan_matches": 0,
+        "post_delete_abstained": true,
+        "byte_clean_pct": 100.0
+      }
+    },
+    {
+      "engine": "OpenViking (openviking)",
+      "total_qas": 199,
+      "ingest_secs": 28.0,
+      "ingest_items": 19,
+      "overall_token_recall_pct": 62.07,
+      "overall_best_line_f1_pct": 28.85,
+      "overall_substring_hit_pct": 18.42,
+      "cat5_abstention_pct": 0.0,
+      "mean_context_tokens": 1894.0,
+      "p50_latency_ms": 8.36,
+      "p95_latency_ms": 9.21,
+      "categories": {
+        "1": {
+          "name": "Single-Hop",
+          "count": 32,
+          "token_recall_pct": 56.37,
+          "best_line_f1_pct": 20.28,
+          "substring_hit_pct": 15.62
+        },
+        "2": {
+          "name": "Temporal",
+          "count": 37,
+          "token_recall_pct": 58.2,
+          "best_line_f1_pct": 31.88,
+          "substring_hit_pct": 5.41
+        },
+        "3": {
+          "name": "Multi-Hop",
+          "count": 13,
+          "token_recall_pct": 37.89,
+          "best_line_f1_pct": 17.95,
+          "substring_hit_pct": 0.0
+        },
+        "4": {
+          "name": "Open-Domain",
+          "count": 70,
+          "token_recall_pct": 71.22,
+          "best_line_f1_pct": 33.18,
+          "substring_hit_pct": 30.0
+        },
+        "5": {
+          "name": "Adversarial",
+          "count": 47,
+          "abstention_rate_pct": 0.0,
+          "adversarial_leak_pct": 87.23
+        }
+      },
+      "deletion_audit": {
+        "pre_delete_byte_matches": 3,
+        "post_delete_byte_matches": 3,
+        "post_delete_abstained": false,
+        "byte_clean_pct": 0.0
+      }
+    },
+    {
+      "engine": "Mem0 (mem0ai)",
+      "total_qas": 199,
+      "ingest_secs": 3.73,
+      "ingest_items": 419,
+      "overall_token_recall_pct": 65.29,
+      "overall_best_line_f1_pct": 27.95,
+      "overall_substring_hit_pct": 22.37,
+      "cat5_abstention_pct": 0.0,
+      "mean_context_tokens": 940.3,
+      "p50_latency_ms": 16.83,
+      "p95_latency_ms": 18.09,
+      "categories": {
+        "1": {
+          "name": "Single-Hop",
+          "count": 32,
+          "token_recall_pct": 56.92,
+          "best_line_f1_pct": 18.89,
+          "substring_hit_pct": 15.62
+        },
+        "2": {
+          "name": "Temporal",
+          "count": 37,
+          "token_recall_pct": 71.08,
+          "best_line_f1_pct": 31.19,
+          "substring_hit_pct": 13.51
+        },
+        "3": {
+          "name": "Multi-Hop",
+          "count": 13,
+          "token_recall_pct": 32.37,
+          "best_line_f1_pct": 14.47,
+          "substring_hit_pct": 0.0
+        },
+        "4": {
+          "name": "Open-Domain",
+          "count": 70,
+          "token_recall_pct": 72.16,
+          "best_line_f1_pct": 32.87,
+          "substring_hit_pct": 34.29
+        },
+        "5": {
+          "name": "Adversarial",
+          "count": 47,
+          "abstention_rate_pct": 0.0,
+          "adversarial_leak_pct": 85.11
+        }
+      },
+      "deletion_audit": {
+        "pre_delete_byte_matches": 3,
+        "post_delete_byte_matches": 4,
+        "post_delete_abstained": false,
+        "byte_clean_pct": 0.0
+      }
+    }
+  ]
+}

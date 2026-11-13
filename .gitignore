@@ -159,4 +159,38 @@ __pycache__/
 *.so
 .pytest_cache/
 .tiktoken_cache/
+.ruff_cache/
+.mypy_cache/
+.hypothesis/
+.coverage
+htmlcov/
+*.egg-info/
+.eggs/
+
+# ML & Benchmark Caches / Downloaded Datasets
+.fastembed_cache/
+fastembed_cache/
+.huggingface/
+knowledge-brain/evals/data/locomo10.json
+evals/data/locomo10.json
+
+# Runtime Memory Store & SQLite Ephemeral Files
+memory_root/
+knowledge-brain/memory_root/
+*.sqlite
+*.sqlite3
+*.db
+*.sqlite-shm
+*.sqlite-wal
+*.sqlite-journal
+*.jsonl.bak
+
+# OS & Editor files
+.DS_Store
+Thumbs.db
+*~
+*.swp
+*.swo
+.idea/
+
 

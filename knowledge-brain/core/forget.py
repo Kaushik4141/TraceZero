@@ -68,12 +68,17 @@ def forget_target(
             deleted_claim_ids.append(cid)
             forbidden_strings.append(row["object_val"])
 
-            # Record suppression HMAC so it's never re-learned
+            # Record suppression HMAC for both exact fact and predicate tombstones
             fhmac = compute_fact_hmac(row["subject"], row["predicate"], row["object_val"])
+            pred_tombstone = compute_fact_hmac("__deleted_predicate__", row["predicate"], "__any__")
             suppression_hmacs.append(fhmac)
             conn.execute(
                 "INSERT OR REPLACE INTO suppression_hashes (fact_hmac, deleted_at) VALUES (?, ?)",
                 (fhmac, now),
+            )
+            conn.execute(
+                "INSERT OR REPLACE INTO suppression_hashes (fact_hmac, deleted_at) VALUES (?, ?)",
+                (pred_tombstone, now),
             )
 
             # Redact exact byte span in raw L2 source file on disk

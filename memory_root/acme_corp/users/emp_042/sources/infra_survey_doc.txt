@@ -1,2 +1,0 @@
-[2026-06-01T14:00:00Z] Source: Internal tooling survey via Google Form (trust_tier=2).
-[2026-06-01T14:02:10Z] SurveyEntry: emp_042 indicated preferred DB is MongoDB for internal metrics logging.

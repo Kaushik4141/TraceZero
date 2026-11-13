@@ -1,2 +1,0 @@
-[2026-11-12T20:45:46Z] Origin: architect_session (trust_tier=3)
-Payment service migration will switch from MongoDB to PostgreSQL 16.

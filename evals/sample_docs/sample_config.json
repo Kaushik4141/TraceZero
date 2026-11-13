@@ -1,0 +1,14 @@
+{
+  "service": "orion_payments",
+  "owner": "emp_042",
+  "aws_region": "us-west-2",
+  "preferred_db": "postgresql",
+  "primary_language": "python",
+  "memory_engine": {
+    "embedding_model": "BAAI/bge-small-en-v1.5",
+    "embedding_dim": 384,
+    "abstention_threshold": 0.80,
+    "wal_mode": true,
+    "secure_delete": true
+  }
+}
