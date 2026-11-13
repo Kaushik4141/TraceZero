@@ -405,7 +405,7 @@
         <div class="overflow-x-auto">
           <table class="w-full text-left text-xs font-mono">
             <thead>
-              <tr class="border-b border-brand-border text-neutral-400">
+              <tr class="border-b border-brand-border text-neutral-400 font-quantico tracking-wide text-[11px]">
                 <th class="py-2.5 px-3">Status</th>
                 <th class="py-2.5 px-3">Subject</th>
                 <th class="py-2.5 px-3">Predicate</th>
@@ -420,7 +420,7 @@
                 <tr class="hover:bg-white/[0.02] transition">
                   <td class="py-3 px-3">
                     <span :class="getStatusClass(c.status)"
-                          class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border"
+                          class="font-quantico font-bold tracking-wider uppercase text-xs"
                           x-text="c.status"></span>
                   </td>
                   <td class="py-3 px-3 text-white font-medium" x-text="c.subject"></td>
@@ -609,7 +609,7 @@
             <div class="p-4 rounded-xl bg-brand-black border border-brand-border space-y-2 font-mono text-xs">
               <div class="flex items-center justify-between">
                 <span class="text-white font-bold" x-text="'Receipt ID: ' + r.receipt_id"></span>
-                <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-950/60 border border-emerald-500/30 text-emerald-400 font-bold"
+                <span class="text-xs text-emerald-400 font-bold tracking-wider font-mono"
                       x-text="r.probe_abstentions"></span>
               </div>
               <div class="text-neutral-400">Target Erased: <span class="text-rose-300" x-text="r.target"></span></div>
@@ -655,7 +655,7 @@
             <div class="text-2xl font-bold text-amber-400 mt-2">~2,800 tokens</div>
             <div class="text-[10px] text-amber-500/80 mt-1">80.6% reduction (hallucination prone)</div>
           </div>
-          <div class="p-4 rounded-xl bg-brand-black border border-emerald-500/40 shadow-[0_0_25px_rgba(16,185,129,0.15)]">
+          <div class="p-4 rounded-xl bg-brand-black border border-brand-border">
             <div class="text-xs text-emerald-400 uppercase font-bold">3. Knowledge Brain (OKF v0.2)</div>
             <div class="text-2xl font-bold text-emerald-400 mt-2">~220 tokens</div>
             <div class="text-[10px] text-emerald-400 mt-1">98.48% reduction (65.9x compression)</div>
@@ -681,7 +681,7 @@
         <div class="overflow-x-auto">
           <table class="w-full text-left text-xs font-mono">
             <thead>
-              <tr class="border-b border-brand-border text-neutral-400">
+              <tr class="border-b border-brand-border text-neutral-400 font-quantico tracking-wide text-[11px]">
                 <th class="py-2.5 px-3">Memory Architecture</th>
                 <th class="py-2.5 px-3">Fact Retrieval</th>
                 <th class="py-2.5 px-3">Temporal Updates</th>
@@ -696,8 +696,8 @@
               <template x-for="s in benchmarkData.strategies" :key="s.name">
                 <tr :class="s.name.includes('Knowledge Brain') ? 'bg-emerald-950/20 font-semibold' : 'hover:bg-white/[0.02]'" class="transition">
                   <td class="py-3 px-3">
-                    <div class="text-white font-medium" x-text="s.name"></div>
-                    <div class="text-[10px] text-neutral-500 font-sans" x-text="s.architecture"></div>
+                    <div class="text-white font-quantico font-bold tracking-wide" x-text="s.name"></div>
+                    <div class="text-[10px] text-neutral-400 font-sans tracking-normal mt-0.5" x-text="s.architecture"></div>
                   </td>
                   <td class="py-3 px-3" :class="s.fact_retrieval_acc >= 0.95 ? 'text-emerald-400 font-bold' : 'text-neutral-300'" x-text="(s.fact_retrieval_acc * 100).toFixed(0) + '%'"></td>
                   <td class="py-3 px-3" :class="s.temporal_update_acc >= 0.90 ? 'text-emerald-400 font-bold' : 'text-neutral-300'" x-text="(s.temporal_update_acc * 100).toFixed(0) + '%'"></td>
@@ -834,10 +834,10 @@
         },
 
         getStatusClass(status) {
-          if (status === 'active') return 'bg-emerald-950/60 text-emerald-400 border-emerald-500/30';
-          if (status === 'superseded') return 'bg-neutral-800 text-neutral-400 border-neutral-700';
-          if (status === 'disputed') return 'bg-amber-950/60 text-amber-400 border-amber-500/30';
-          return 'bg-rose-950/60 text-rose-400 border-rose-500/30';
+          if (status === 'active') return 'text-emerald-400';
+          if (status === 'superseded') return 'text-neutral-500';
+          if (status === 'disputed') return 'text-amber-400';
+          return 'text-rose-400';
         },
 
         async runLiveRecall() {
