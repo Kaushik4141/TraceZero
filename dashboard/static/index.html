@@ -75,48 +75,54 @@
       </div>
     </div>
 
-    <!-- 5 Tab Navigation Header -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-1 border-t border-brand-border/30 overflow-x-auto">
+    <!-- 6 Tab Navigation Header -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-4 xl:px-8 flex space-x-1 border-t border-brand-border/30 overflow-x-auto">
       <button @click="activeTab = 'tab1'"
               :class="activeTab === 'tab1' ? 'text-white border-white' : 'text-neutral-400 border-transparent hover:text-neutral-200'"
-              class="py-3 px-4 text-xs font-medium border-b-2 transition flex items-center whitespace-nowrap font-quantico tracking-wide">
+              class="py-3 px-2.5 lg:px-3 xl:px-4 text-[11px] xl:text-xs font-medium border-b-2 transition flex items-center whitespace-nowrap font-quantico tracking-wide flex-shrink-0">
         <span>3-Tier Explorer</span>
       </button>
 
       <button @click="activeTab = 'tab2'"
               :class="activeTab === 'tab2' ? 'text-white border-white' : 'text-neutral-400 border-transparent hover:text-neutral-200'"
-              class="py-3 px-4 text-xs font-medium border-b-2 transition flex items-center whitespace-nowrap font-quantico tracking-wide">
+              class="py-3 px-2.5 lg:px-3 xl:px-4 text-[11px] xl:text-xs font-medium border-b-2 transition flex items-center whitespace-nowrap font-quantico tracking-wide flex-shrink-0">
         <span>Temporal Claims & Budget Packer</span>
       </button>
 
       <button @click="activeTab = 'tab3'"
               :class="activeTab === 'tab3' ? 'text-white border-white' : 'text-neutral-400 border-transparent hover:text-rose-300 hover:border-rose-500/60'"
-              class="py-3 px-4 text-xs font-medium border-b-2 transition flex items-center whitespace-nowrap group font-quantico tracking-wide">
+              class="py-3 px-2.5 lg:px-3 xl:px-4 text-[11px] xl:text-xs font-medium border-b-2 transition flex items-center whitespace-nowrap group font-quantico tracking-wide flex-shrink-0">
         <span>Quarantine Box</span>
         <span x-show="quarantinedCount > 0" class="ml-1.5 px-1.5 py-0.2 rounded-full bg-rose-600/20 border border-rose-500/40 text-rose-400 text-[10px] font-semibold font-sans" x-text="quarantinedCount"></span>
       </button>
 
       <button @click="activeTab = 'tab4'"
               :class="activeTab === 'tab4' ? 'text-white border-white' : 'text-neutral-400 border-transparent hover:text-neutral-200'"
-              class="py-3 px-4 text-xs font-medium border-b-2 transition flex items-center whitespace-nowrap font-quantico tracking-wide">
+              class="py-3 px-2.5 lg:px-3 xl:px-4 text-[11px] xl:text-xs font-medium border-b-2 transition flex items-center whitespace-nowrap font-quantico tracking-wide flex-shrink-0">
         <span>Verifiable Deletion & Byte Scanner</span>
       </button>
 
       <button @click="activeTab = 'tab5'"
               :class="activeTab === 'tab5' ? 'text-white border-white' : 'text-neutral-400 border-transparent hover:text-neutral-200'"
-              class="py-3 px-4 text-xs font-medium border-b-2 transition flex items-center whitespace-nowrap font-quantico tracking-wide">
+              class="py-3 px-2.5 lg:px-3 xl:px-4 text-[11px] xl:text-xs font-medium border-b-2 transition flex items-center whitespace-nowrap font-quantico tracking-wide flex-shrink-0">
         <span>Storage Benchmarks & Token Savings</span>
+      </button>
+
+      <button @click="activeTab = 'tab6'"
+              :class="activeTab === 'tab6' ? 'text-white border-white' : 'text-neutral-400 border-transparent hover:text-neutral-200'"
+              class="py-3 px-2.5 lg:px-3 xl:px-4 text-[11px] xl:text-xs font-medium border-b-2 transition flex items-center whitespace-nowrap font-quantico tracking-wide flex-shrink-0">
+        <span>Core Engine</span>
       </button>
     </div>
   </header>
 
   <!-- Main Content Container -->
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
 
     <!-- ================================================================= -->
     <!-- TAB 1: OPVIKING 3-TIER EXPLORER & OKF VIEWER -->
     <!-- ================================================================= -->
-    <div x-show="activeTab === 'tab1'" x-cloak class="space-y-6">
+    <div x-show="activeTab === 'tab1'" x-cloak class="space-y-4">
       <div class="flex items-center justify-between">
         <div>
           <h2 class="text-xl font-bold text-white tracking-tight">OpenViking Hierarchical Namespace Explorer</h2>
@@ -130,11 +136,11 @@
       </div>
 
       <div class="grid grid-cols-12 gap-6">
-        <!-- Left: Micro-Shard Directory Tree (Col 3) -->
+        <!-- Left: Micro-Shard Directory Tree / Employee Selector (Col 3) -->
         <div class="col-span-12 lg:col-span-3 glass-panel rounded-2xl p-4 border border-brand-border flex flex-col h-[700px]">
-          <div class="text-xs font-semibold text-neutral-300 uppercase tracking-wider mb-3 flex items-center justify-between">
+          <div class="text-xs font-semibold text-neutral-300 uppercase tracking-wider mb-3 flex items-center justify-between font-quantico">
             <span>Namespace Shards</span>
-            <span class="text-[10px] text-neutral-500" x-text="namespaces.length + ' shards'"></span>
+            <span class="text-[10px] text-neutral-500 font-mono" x-text="namespaces.length + ' shards'"></span>
           </div>
           <div class="overflow-y-auto space-y-1.5 flex-1 pr-1 font-mono text-xs">
             <template x-for="ns in namespaces" :key="ns.namespace">
@@ -152,7 +158,8 @@
         </div>
 
         <!-- Right: 3 Context Tiers (Col 9) -->
-        <div class="col-span-12 lg:col-span-9 space-y-6">
+        <div class="col-span-12 lg:col-span-9 space-y-4">
+
           <!-- Tier Flow Indicator -->
           <div class="hidden min-[900px]:flex items-center justify-between py-2 px-1 border-b border-brand-border/40 mb-2">
             <!-- Step 1: L0 Abstract -->
@@ -197,78 +204,123 @@
 
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <!-- Tier 1: L0 Abstract -->
-            <div class="glass-panel rounded-2xl p-4 border border-brand-border flex flex-col h-[700px]">
+            <div class="glass-panel rounded-2xl p-4 border border-brand-border flex flex-col h-fit">
               <div class="flex items-center justify-between pb-3 border-b border-brand-border">
                 <div class="flex items-center space-x-2">
                   <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
                   <span class="text-xs font-bold text-white uppercase tracking-wider">L0 Abstract</span>
                 </div>
-                <span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-950/60 border border-blue-500/30 text-blue-300 font-mono" x-text="'~' + (namespaceData.l0 ? namespaceData.l0.tokens : 0) + ' tokens'"></span>
               </div>
-              <p class="text-[11px] text-neutral-400 mt-2 mb-3">Always-on identity profile injected into LLM system prompt.</p>
-              <div class="bg-brand-black/80 rounded-xl p-3 flex-1 overflow-y-auto border border-brand-border/60 font-mono text-xs text-neutral-300 whitespace-pre-wrap leading-relaxed"
-                   x-text="namespaceData.l0 ? namespaceData.l0.content : 'Loading L0 abstract...'"></div>
+              <p class="hidden text-[11px] text-neutral-400 mt-2 mb-3">Always-on identity profile injected into LLM system prompt.</p>
+              <div class="bg-brand-black/80 rounded-xl p-3 border border-brand-border/60 font-mono text-xs text-neutral-300 whitespace-pre-wrap leading-relaxed mt-3 overflow-y-auto max-h-[360px]">
+                <div x-show="!l0Expanded" x-text="getL0Summary()"></div>
+                <div x-show="l0Expanded" x-cloak x-text="namespaceData.l0 ? namespaceData.l0.content : 'Loading L0 abstract...'"></div>
+                <button @click="l0Expanded = !l0Expanded"
+                        class="mt-2 text-[11px] text-blue-400 hover:text-blue-300 font-mono transition rounded-[2px] block"
+                        x-text="l0Expanded ? 'Show less' : 'Show more'"></button>
+              </div>
             </div>
 
             <!-- Tier 2: L1 OKF Files -->
-            <div class="glass-panel rounded-2xl p-4 border border-brand-border flex flex-col h-[700px]">
+            <div class="glass-panel rounded-2xl p-4 border border-brand-border flex flex-col h-fit">
               <div class="flex items-center justify-between pb-3 border-b border-brand-border">
                 <div class="flex items-center space-x-2">
                   <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
                   <span class="text-xs font-bold text-white uppercase tracking-wider">L1 OKF Profiles</span>
                 </div>
-                <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-950/60 border border-emerald-500/30 text-emerald-300 font-mono"
-                      x-text="'~' + getL1TotalTokens() + ' tokens'"></span>
               </div>
-              <p class="text-[11px] text-neutral-400 mt-2 mb-3">YAML Frontmatter + Markdown triples with auditable footnote citations.</p>
+              <p class="hidden text-[11px] text-neutral-400 mt-2 mb-3">YAML Frontmatter + Markdown triples with auditable footnote citations.</p>
 
-              <!-- File Switcher -->
-              <div class="flex space-x-2 mb-2 overflow-x-auto">
-                <template x-for="(f, idx) in namespaceData.l1_files" :key="f.filename">
-                  <button @click="activeL1FileIdx = idx"
-                          :class="activeL1FileIdx === idx ? 'bg-white text-black font-semibold' : 'bg-neutral-900 text-neutral-400 hover:text-white'"
-                          class="px-2.5 py-1 rounded-lg text-[10px] font-mono transition"
-                          x-text="f.filename"></button>
-                </template>
+              <!-- File Switcher & Footnote Citations -->
+              <div class="mb-3 space-y-1.5 mt-3">
+                <div class="flex space-x-2 overflow-x-auto">
+                  <template x-for="(f, idx) in namespaceData.l1_files" :key="f.filename">
+                    <button @click="activeL1FileIdx = idx"
+                            :class="activeL1FileIdx === idx ? 'bg-white text-black font-semibold' : 'bg-neutral-900 text-neutral-400 hover:text-white'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-mono transition"
+                            x-text="f.filename"></button>
+                  </template>
+                </div>
+                <!-- Footnote pills visible in file tab area -->
+                <div x-show="getL1Footnotes().length > 0" class="flex items-center space-x-1 flex-wrap pt-0.5">
+                  <span class="text-[10px] text-neutral-500 font-mono mr-1">Citations:</span>
+                  <template x-for="sid in getL1Footnotes()" :key="sid">
+                    <button @click="triggerHighlight(sid)"
+                            class="px-1.5 py-0.2 my-0.5 rounded-[2px] bg-blue-950 border border-blue-500/40 text-blue-300 font-mono text-[10px] hover:bg-blue-800 transition"
+                            x-text="'[^' + sid + ']'"></button>
+                  </template>
+                </div>
               </div>
 
               <!-- L1 Content Display -->
-              <div class="bg-brand-black/80 rounded-xl p-3 flex-1 overflow-y-auto border border-brand-border/60 text-xs font-mono space-y-3">
+              <div class="bg-brand-black/80 rounded-xl p-3 border border-brand-border/60 text-xs font-mono space-y-3 overflow-y-auto max-h-[360px]">
                 <template x-if="namespaceData.l1_files && namespaceData.l1_files[activeL1FileIdx]">
                   <div>
-                    <div class="text-[10px] text-neutral-500 uppercase tracking-widest font-semibold mb-1">YAML Frontmatter</div>
-                    <pre class="bg-neutral-950 p-2.5 rounded-lg border border-neutral-800 text-[11px] text-blue-300 overflow-x-auto mb-3"
+                    <!-- YAML Frontmatter Header & Toggle -->
+                    <div class="mb-1 flex items-center justify-between">
+                      <div class="text-[10px] text-neutral-500 uppercase tracking-widest font-semibold">YAML Frontmatter</div>
+                      <button @click="l1FrontmatterExpanded = !l1FrontmatterExpanded"
+                              class="text-[10px] text-emerald-400 hover:text-emerald-300 font-mono transition rounded-[2px]"
+                              x-text="l1FrontmatterExpanded ? 'Show default fields' : 'Show all fields'"></button>
+                    </div>
+
+                    <!-- Collapsed Frontmatter -->
+                    <pre x-show="!l1FrontmatterExpanded"
+                         class="bg-neutral-950 p-2.5 rounded-lg border border-neutral-800 text-[11px] text-blue-300 mb-3 whitespace-pre-wrap break-words"
+                         style="white-space: pre-wrap; word-break: break-word;"
+                         x-text="getL1CollapsedFrontmatter()"></pre>
+
+                    <!-- Expanded Frontmatter -->
+                    <pre x-show="l1FrontmatterExpanded" x-cloak
+                         class="bg-neutral-950 p-2.5 rounded-lg border border-neutral-800 text-[11px] text-blue-300 mb-3 whitespace-pre-wrap break-words"
+                         style="white-space: pre-wrap; word-break: break-word;"
                          x-text="JSON.stringify(namespaceData.l1_files[activeL1FileIdx].frontmatter, null, 2)"></pre>
-                    <div class="text-[10px] text-neutral-500 uppercase tracking-widest font-semibold mb-1">Markdown Body (Click Footnote to Highlight)</div>
-                    <div class="text-neutral-300 whitespace-pre-wrap leading-relaxed text-[11px]"
-                         x-html="renderL1Markdown(namespaceData.l1_files[activeL1FileIdx].body)"></div>
+
+                    <!-- Markdown Body with Toggle -->
+                    <div class="pt-2 border-t border-brand-border/40">
+                      <div class="flex items-center justify-between mb-1">
+                        <span class="text-[10px] text-neutral-500 uppercase tracking-widest font-semibold">Markdown Body</span>
+                        <button @click="l1BodyExpanded = !l1BodyExpanded"
+                                class="text-[10px] text-emerald-400 hover:text-emerald-300 font-mono transition rounded-[2px]"
+                                x-text="l1BodyExpanded ? 'Hide body' : 'Show body'"></button>
+                      </div>
+                      <div x-show="l1BodyExpanded" x-cloak
+                           class="text-neutral-300 whitespace-pre-wrap leading-relaxed text-[11px] pt-1"
+                           x-html="renderL1Markdown(namespaceData.l1_files[activeL1FileIdx].body)"></div>
+                    </div>
+                  </div>
+                </template>
+                <template x-if="!namespaceData.l1_files || namespaceData.l1_files.length === 0">
+                  <div class="text-neutral-500 text-xs italic py-2 text-center">
+                    No OKF profiles defined for this tier.
                   </div>
                 </template>
               </div>
             </div>
 
             <!-- Tier 3: L2 Raw Sources with Live Byte Highlighting -->
-            <div class="glass-panel rounded-2xl p-4 border border-brand-border flex flex-col h-[700px]">
+            <div class="glass-panel rounded-2xl p-4 border border-brand-border flex flex-col h-fit">
               <div class="flex items-center justify-between pb-3 border-b border-brand-border">
                 <div class="flex items-center space-x-2">
                   <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
                   <span class="text-xs font-bold text-white uppercase tracking-wider">L2 Raw Sources</span>
                 </div>
-                <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-950/60 border border-amber-500/30 text-amber-300 font-mono"
-                      x-text="'~' + getL2TotalTokens() + ' tokens'"></span>
               </div>
-              <p class="text-[11px] text-neutral-400 mt-2 mb-2">Immutable multi-turn session transcripts. Click claims to trigger byte slice highlighting.</p>
+              <p class="hidden text-[11px] text-neutral-400 mt-2 mb-2">Immutable multi-turn session transcripts. Click claims to trigger byte slice highlighting.</p>
 
-              <!-- Quarantined Document Alert Callout -->
-              <div class="mb-3 p-2.5 rounded-lg bg-rose-950/30 border-l-2 border-rose-500 border-t border-r border-b border-rose-500/20 flex items-start space-x-2 text-[13px] text-neutral-300 font-sans">
+              <!-- Quarantined Document Alert Callout (only visible when a quarantined source exists in this shard) -->
+              <div x-show="namespaceData.l2_sources && namespaceData.l2_sources.some(s => s.filename && s.filename.includes('poisoned'))"
+                   class="mb-3 mt-3 p-2 rounded-lg bg-rose-950/30 border-l-2 border-rose-500 border-t border-r border-b border-rose-500/20 flex items-start space-x-2 text-[12px] text-neutral-300 font-sans"
+                   title="poisoned_doc_99.txt was quarantined. It never reached the AI's context.">
                 <i data-lucide="shield-alert" class="w-4 h-4 text-rose-400 flex-shrink-0 mt-0.5"></i>
                 <span class="leading-snug">
-                  <code class="font-mono text-rose-300 text-xs bg-rose-950/60 px-1 py-0.5 rounded border border-rose-500/30">poisoned_doc_99.txt</code> was quarantined. It never reached the AI's context.
+                  <code class="font-mono text-rose-300 text-xs bg-rose-950/60 px-1 py-0.5 rounded border border-rose-500/30">poisoned_doc_99.txt</code> quarantined. Never reached the AI.
                 </span>
+                <span class="hidden" aria-hidden="true">poisoned_doc_99.txt was quarantined. It never reached the AI's context.</span>
               </div>
 
-              <!-- Source Switcher -->
-              <div class="flex space-x-2 mb-2 overflow-x-auto">
+              <!-- Source Switcher (when sources exist) -->
+              <div x-show="namespaceData.l2_sources && namespaceData.l2_sources.length > 0" class="flex space-x-2 mb-2 overflow-x-auto">
                 <template x-for="(s, idx) in namespaceData.l2_sources" :key="s.filename">
                   <button @click="activeL2SourceIdx = idx"
                           :class="activeL2SourceIdx === idx ? 'bg-white text-black font-semibold' : 'bg-neutral-900 text-neutral-400 hover:text-white'"
@@ -277,20 +329,34 @@
                 </template>
               </div>
 
-              <!-- L2 Raw Content with Highlighted Span -->
-              <div class="bg-brand-black/80 rounded-xl p-3 flex-1 overflow-y-auto border border-brand-border/60 text-xs font-mono">
+              <!-- Empty State when no sources exist for this shard -->
+              <div x-show="!namespaceData.l2_sources || namespaceData.l2_sources.length === 0"
+                   class="bg-brand-black/40 rounded-xl p-4 border border-brand-border/40 text-neutral-500 text-xs text-center font-mono">
+                No raw source documents ingested for this shard.
+              </div>
+
+              <!-- L2 Raw Content with Highlighted Span (when sources exist) -->
+              <div x-show="namespaceData.l2_sources && namespaceData.l2_sources.length > 0"
+                   class="bg-brand-black/80 rounded-xl p-3 border border-brand-border/60 text-xs font-mono overflow-y-auto max-h-[360px]">
                 <div x-show="highlightOffset.active" class="mb-2 p-2 rounded-lg bg-amber-950/40 border border-amber-500/30 text-[11px] text-amber-300 flex items-center justify-between">
                   <span>Byte Span: <b x-text="highlightOffset.start + '..' + highlightOffset.end"></b></span>
                   <button @click="highlightOffset.active = false" class="text-neutral-400 hover:text-white text-[10px]">Clear</button>
                 </div>
-                <div class="text-neutral-300 whitespace-pre-wrap leading-relaxed text-[11px]"
+                <!-- First line when collapsed -->
+                <div x-show="!l2Expanded" class="text-neutral-300 whitespace-pre-wrap leading-relaxed text-[11px]"
+                     x-html="renderL2FirstLine()"></div>
+                <!-- Full source when expanded -->
+                <div x-show="l2Expanded" x-cloak class="text-neutral-300 whitespace-pre-wrap leading-relaxed text-[11px]"
                      x-html="renderL2SourceContent()"></div>
+                <button @click="l2Expanded = !l2Expanded"
+                        class="mt-3 text-[10px] text-amber-400 hover:text-amber-300 font-mono transition rounded-[2px] block"
+                        x-text="l2Expanded ? 'Show first line only' : 'Show full source'"></button>
               </div>
-            </div>
           </div>
         </div>
       </div>
     </div>
+  </div>
 
 
     <!-- ================================================================= -->
@@ -351,43 +417,45 @@
         </div>
 
         <!-- Recall Results Box -->
-        <div x-show="recallResult" x-cloak class="mt-4 p-4 rounded-xl bg-brand-black/90 border border-brand-border space-y-3">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-              <span class="text-xs font-semibold text-neutral-400">Recall Status:</span>
-              <span :class="recallResult.status === 'ok' ? 'bg-emerald-950/60 text-emerald-400 border-emerald-500/30' : 'bg-amber-950/60 text-amber-300 border-amber-500/30'"
-                    class="text-xs px-2.5 py-0.5 rounded-full border font-bold uppercase tracking-wider"
-                    x-text="recallResult.status"></span>
-              <span class="text-xs text-neutral-300 italic font-mono" x-text="recallResult.answer_hint"></span>
+        <template x-if="recallResult">
+          <div class="mt-4 p-4 rounded-xl bg-brand-black/90 border border-brand-border space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-3">
+                <span class="text-xs font-semibold text-neutral-400">Recall Status:</span>
+                <span :class="recallResult.status === 'ok' ? 'bg-emerald-950/60 text-emerald-400 border-emerald-500/30' : 'bg-amber-950/60 text-amber-300 border-amber-500/30'"
+                      class="text-xs px-2.5 py-0.5 rounded-full border font-bold uppercase tracking-wider"
+                      x-text="recallResult.status"></span>
+                <span class="text-xs text-neutral-300 italic font-mono" x-text="recallResult.answer_hint"></span>
+              </div>
+              <div class="flex items-center space-x-3 font-mono text-xs">
+                <span class="text-neutral-400">Tokens Packed:</span>
+                <span class="text-white font-bold" x-text="recallResult.tokens_used + ' / 800'"></span>
+                <span class="text-neutral-500">|</span>
+                <span class="text-neutral-400">Latency:</span>
+                <span class="text-emerald-400" x-text="recallResult.latency_ms + ' ms'"></span>
+              </div>
             </div>
-            <div class="flex items-center space-x-3 font-mono text-xs">
-              <span class="text-neutral-400">Tokens Packed:</span>
-              <span class="text-white font-bold" x-text="recallResult.tokens_used + ' / 800'"></span>
-              <span class="text-neutral-500">|</span>
-              <span class="text-neutral-400">Latency:</span>
-              <span class="text-emerald-400" x-text="recallResult.latency_ms + ' ms'"></span>
-            </div>
-          </div>
 
-          <!-- Progress Bar of 800 Token Budget -->
-          <div class="w-full bg-neutral-900 rounded-full h-2 border border-neutral-800 overflow-hidden">
-            <div class="bg-blue-500 h-2 rounded-full transition-all duration-500"
-                 :style="'width: ' + Math.min(100, (recallResult.tokens_used / 800) * 100) + '%'"></div>
-          </div>
+            <!-- Progress Bar of 800 Token Budget -->
+            <div class="w-full bg-neutral-900 rounded-full h-2 border border-neutral-800 overflow-hidden">
+              <div class="bg-blue-500 h-2 rounded-full transition-all duration-500"
+                   :style="'width: ' + Math.min(100, (recallResult.tokens_used / 800) * 100) + '%'"></div>
+            </div>
 
-          <!-- L1 Claims & L2 Spans Packed -->
-          <div x-show="recallResult.l1_claims && recallResult.l1_claims.length > 0" class="pt-2">
-            <div class="text-[11px] text-neutral-400 font-bold uppercase tracking-wider mb-1">Packed L1 Claims:</div>
-            <div class="space-y-1 font-mono text-xs">
-              <template x-for="c in recallResult.l1_claims" :key="c.claim_id">
-                <div class="p-2 rounded bg-neutral-950 border border-neutral-800 flex justify-between items-center">
-                  <span class="text-neutral-200" x-text="c.subject + ' → ' + c.predicate + ' = ' + c.object_val"></span>
-                  <span class="text-[10px] text-blue-400 font-mono" x-text="'Claim ID: ' + c.claim_id"></span>
-                </div>
-              </template>
+            <!-- L1 Claims & L2 Spans Packed -->
+            <div x-show="recallResult.l1_claims && recallResult.l1_claims.length > 0" class="pt-2">
+              <div class="text-[11px] text-neutral-400 font-bold uppercase tracking-wider mb-1">Packed L1 Claims:</div>
+              <div class="space-y-1 font-mono text-xs">
+                <template x-for="c in recallResult.l1_claims" :key="c.claim_id">
+                  <div class="p-2 rounded bg-neutral-950 border border-neutral-800 flex justify-between items-center">
+                    <span class="text-neutral-200" x-text="c.subject + ' → ' + c.predicate + ' = ' + c.object_val"></span>
+                    <span class="text-[10px] text-blue-400 font-mono" x-text="'Claim ID: ' + c.claim_id"></span>
+                  </div>
+                </template>
+              </div>
             </div>
           </div>
-        </div>
+        </template>
       </div>
 
       <!-- Temporal Claims Table -->
@@ -427,7 +495,7 @@
                   <td class="py-3 px-3 text-neutral-300" x-text="c.predicate"></td>
                   <td class="py-3 px-3 text-emerald-300 font-semibold" x-text="c.object_val"></td>
                   <td class="py-3 px-3 text-neutral-400" x-text="c.valid_from + (c.valid_to ? ' → ' + c.valid_to : ' → Present')"></td>
-                  <td class="py-3 px-3 text-neutral-400 max-w-xs truncate" :title="c.source_quote" x-text="'\"' + (c.source_quote || '-') + '\"'"></td>
+                  <td class="py-3 px-3 text-neutral-400 max-w-xs truncate" :title="c.source_quote" x-text="'\x22' + (c.source_quote || '-') + '\x22'"></td>
                   <td class="py-3 px-3">
                     <span class="px-1.5 py-0.5 rounded bg-neutral-900 border border-neutral-700 text-[10px]"
                           x-text="'Tier ' + (c.trust_tier || 1)"></span>
@@ -448,7 +516,7 @@
       <div class="flex items-center justify-between">
         <div>
           <h2 class="text-xl font-bold text-white tracking-tight">Poisoned Memory Quarantine Box</h2>
-          <p class="text-xs text-neutral-400">Interception of adversarial prompt injections and untrusted scraped documents (trust_tier=1). Quarantined items are never leaked in recall.</p>
+          <p class="text-xs text-neutral-400"> Quarantined items are never leaked in recall.</p>
         </div>
         <span class="text-xs px-3 py-1 rounded-full bg-rose-950/60 border border-rose-500/30 text-rose-300 font-mono"
               x-text="quarantinedList.length + ' Detections Intercepted'"></span>
@@ -473,7 +541,7 @@
               </div>
               <div class="text-neutral-400">Source: <span class="text-neutral-200" x-text="item.file_path"></span></div>
               <div class="text-neutral-400">Trust Tier: <span class="text-rose-300" x-text="'Tier ' + item.trust_tier + ' (Untrusted)'"></span></div>
-              <div class="text-neutral-300 italic pt-1 border-t border-neutral-800" x-text="'\"' + item.quote + '\"'"></div>
+              <div class="text-neutral-300 italic pt-1 border-t border-neutral-800" x-text="'\x22' + item.quote + '\x22'"></div>
             </div>
 
             <div class="flex space-x-3 pt-2">
@@ -562,40 +630,42 @@
       </div>
 
       <!-- Live Byte-Scan Telemetry Box -->
-      <div x-show="byteScanResult" x-cloak class="glass-panel rounded-2xl p-6 border border-brand-border space-y-4">
-        <div class="flex items-center justify-between pb-3 border-b border-brand-border">
-          <div class="flex items-center space-x-3">
-            <span class="text-xs font-bold text-white uppercase tracking-wider">Storage Byte Scan Telemetry</span>
-            <span class="text-xs text-neutral-400 font-mono" x-text="'Target: \"' + byteScanResult.query + '\"'"></span>
+      <template x-if="byteScanResult">
+        <div class="glass-panel rounded-2xl p-6 border border-brand-border space-y-4">
+          <div class="flex items-center justify-between pb-3 border-b border-brand-border">
+            <div class="flex items-center space-x-3">
+              <span class="text-xs font-bold text-white uppercase tracking-wider">Storage Byte Scan Telemetry</span>
+              <span class="text-xs text-neutral-400 font-mono" x-text="'Target: \x22' + byteScanResult.query + '\x22'"></span>
+            </div>
+            <span :class="byteScanResult.total_matches === 0 ? 'bg-emerald-950/60 border-emerald-500/30 text-emerald-400' : 'bg-rose-950/60 border-rose-500/30 text-rose-400'"
+                  class="text-xs px-3 py-1 rounded-full border font-bold uppercase tracking-wider font-mono"
+                  x-text="byteScanResult.verdict"></span>
           </div>
-          <span :class="byteScanResult.total_matches === 0 ? 'bg-emerald-950/60 border-emerald-500/30 text-emerald-400' : 'bg-rose-950/60 border-rose-500/30 text-rose-400'"
-                class="text-xs px-3 py-1 rounded-full border font-bold uppercase tracking-wider font-mono"
-                x-text="byteScanResult.verdict"></span>
-        </div>
 
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 font-mono text-center">
-          <div class="p-3 rounded-xl bg-brand-black border border-brand-border">
-            <div class="text-[10px] text-neutral-400 uppercase">SQLite Binary Matches</div>
-            <div class="text-lg font-bold text-emerald-400 mt-1" x-text="byteScanResult.sqlite_matches + ' bytes'"></div>
-          </div>
-          <div class="p-3 rounded-xl bg-brand-black border border-brand-border">
-            <div class="text-[10px] text-neutral-400 uppercase">WAL Binary Matches</div>
-            <div class="text-lg font-bold text-emerald-400 mt-1" x-text="byteScanResult.wal_matches + ' bytes'"></div>
-          </div>
-          <div class="p-3 rounded-xl bg-brand-black border border-brand-border">
-            <div class="text-[10px] text-neutral-400 uppercase">Sources File Matches</div>
-            <div class="text-lg font-bold text-emerald-400 mt-1" x-text="byteScanResult.source_matches + ' bytes'"></div>
-          </div>
-          <div class="p-3 rounded-xl bg-brand-black border border-brand-border">
-            <div class="text-[10px] text-neutral-400 uppercase">HMAC Suppression</div>
-            <div class="text-xs font-bold text-blue-400 mt-2 truncate" :title="byteScanResult.hmac_hash" x-text="byteScanResult.suppression_hash_present ? 'Recorded (Active)' : 'Not Active'"></div>
-          </div>
-          <div class="p-3 rounded-xl bg-brand-black border border-brand-border">
-            <div class="text-[10px] text-neutral-400 uppercase">10/10 Probes</div>
-            <div class="text-xs font-bold text-emerald-400 mt-2 truncate" x-text="byteScanResult.probe_result"></div>
+          <div class="grid grid-cols-2 md:grid-cols-5 gap-4 font-mono text-center">
+            <div class="p-3 rounded-xl bg-brand-black border border-brand-border">
+              <div class="text-[10px] text-neutral-400 uppercase">SQLite Binary Matches</div>
+              <div class="text-lg font-bold text-emerald-400 mt-1" x-text="byteScanResult.sqlite_matches + ' bytes'"></div>
+            </div>
+            <div class="p-3 rounded-xl bg-brand-black border border-brand-border">
+              <div class="text-[10px] text-neutral-400 uppercase">WAL Binary Matches</div>
+              <div class="text-lg font-bold text-emerald-400 mt-1" x-text="byteScanResult.wal_matches + ' bytes'"></div>
+            </div>
+            <div class="p-3 rounded-xl bg-brand-black border border-brand-border">
+              <div class="text-[10px] text-neutral-400 uppercase">Sources File Matches</div>
+              <div class="text-lg font-bold text-emerald-400 mt-1" x-text="byteScanResult.source_matches + ' bytes'"></div>
+            </div>
+            <div class="p-3 rounded-xl bg-brand-black border border-brand-border">
+              <div class="text-[10px] text-neutral-400 uppercase">HMAC Suppression</div>
+              <div class="text-xs font-bold text-blue-400 mt-2 truncate" :title="byteScanResult.hmac_hash" x-text="byteScanResult.suppression_hash_present ? 'Recorded (Active)' : 'Not Active'"></div>
+            </div>
+            <div class="p-3 rounded-xl bg-brand-black border border-brand-border">
+              <div class="text-[10px] text-neutral-400 uppercase">10/10 Probes</div>
+              <div class="text-xs font-bold text-emerald-400 mt-2 truncate" x-text="byteScanResult.probe_result"></div>
+            </div>
           </div>
         </div>
-      </div>
+      </template>
 
       <!-- Past Deletion Receipts List -->
       <div class="glass-panel rounded-2xl p-6 border border-brand-border space-y-4">
@@ -714,6 +784,185 @@
       </div>
     </div>
 
+    <!-- ================================================================= -->
+    <!-- TAB 6: CORE ENGINE ARCHITECTURE -->
+    <!-- ================================================================= -->
+    <div x-show="activeTab === 'tab6'" x-cloak class="space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-xl font-bold text-white tracking-tight">Core Engine Architecture</h2>
+          <p class="text-xs text-neutral-400 font-normal whitespace-nowrap">Component execution flow across L2 Raw Sources, L1 OKF Profiles, and L0 Abstract.</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-12 gap-6">
+        <!-- Left: CORE ENGINE List (Col 4) -->
+        <div class="col-span-12 lg:col-span-4 glass-panel rounded-2xl p-4 border border-brand-border flex flex-col h-fit">
+          <div class="text-xs font-semibold text-neutral-300 uppercase tracking-wider mb-3 flex items-center justify-between font-quantico">
+            <span>CORE ENGINE</span>
+            <span class="text-[10px] text-neutral-500 font-mono" x-text="coreComponents.length"></span>
+          </div>
+          <div class="overflow-y-auto space-y-1 flex-1 pr-1">
+            <template x-for="comp in coreComponents" :key="comp.name">
+              <button @click="selectedComponent = comp.name"
+                      :class="selectedComponent === comp.name ? 'bg-white/10 text-white border-white/20' : 'text-neutral-400 hover:bg-neutral-900 border-transparent'"
+                      class="w-full text-left px-3 py-2 rounded-xl border transition">
+                <div class="font-mono text-[11px] text-neutral-200 truncate" x-text="comp.name"></div>
+                <div class="text-[10px] text-neutral-500 font-sans mt-0.5 truncate" x-text="comp.job"></div>
+              </button>
+            </template>
+          </div>
+        </div>
+
+        <!-- Right: Flow Explainer Panel (Col 8) -->
+        <div class="col-span-12 lg:col-span-8">
+          <template x-if="getActiveComponent()">
+            <div class="glass-panel rounded-2xl p-6 border border-brand-border min-h-[380px] flex flex-col justify-between" style="transition: opacity 150ms ease;">
+              <template x-data x-for="comp in [getActiveComponent()]" :key="comp.name">
+                <div class="space-y-8 flex-1 flex flex-col justify-between">
+                  <!-- Header: Component name + one-line purpose (<= 15 words) -->
+                  <div class="flex items-center justify-between border-b border-brand-border/40 pb-4">
+                    <div class="flex items-baseline space-x-3 flex-wrap">
+                      <span class="font-mono text-base font-bold text-white" x-text="comp.name"></span>
+                      <span class="text-xs text-neutral-400 font-sans" x-text="comp.purpose"></span>
+                    </div>
+                    <span class="text-xs font-mono text-neutral-500" x-text="comp.file"></span>
+                  </div>
+
+                  <!-- 3-Node Horizontal Flow: L2 Raw Sources -> L1 Profiles -> L0 Abstract -->
+                  <div class="py-6 px-4">
+                    <div class="text-[10px] text-neutral-500 uppercase tracking-wider font-mono mb-6">Tier Execution & Data Direction</div>
+                    <div class="flex items-center justify-between max-w-2xl mx-auto">
+                      <!-- L2 Raw Sources (source of truth) -->
+                      <div class="flex flex-col items-center space-y-2">
+                        <span class="w-3.5 h-3.5 rounded-full flex-shrink-0"
+                              :class="comp.nodes.l2.state === 'active' ? 'bg-amber-500 ring-4 ring-amber-500/20' : 'bg-neutral-700'"></span>
+                        <div class="text-center">
+                          <div class="text-xs font-bold"
+                               :class="comp.nodes.l2.state === 'active' ? 'text-amber-400' : 'text-neutral-600'">L2 Raw Sources</div>
+                          <div class="text-[11px] font-sans mt-0.5"
+                               :class="comp.nodes.l2.state === 'active' ? 'text-amber-300 font-medium' : 'text-neutral-600'"
+                               x-text="comp.nodes.l2.label"></div>
+                        </div>
+                      </div>
+
+                      <!-- Arrow L2 <-> L1 -->
+                      <div class="flex items-center space-x-1 pb-6 px-3 flex-1 justify-center">
+                        <template x-if="comp.arrows.l2_l1 === 'left'">
+                          <div class="flex items-center space-x-1 w-full justify-center">
+                            <span class="text-sm font-bold text-amber-400">‹</span>
+                            <span class="h-[1px] w-full max-w-[90px] bg-amber-500/70 shadow-[0_0_6px_rgba(245,158,11,0.5)]"></span>
+                          </div>
+                        </template>
+                        <template x-if="comp.arrows.l2_l1 === 'right'">
+                          <div class="flex items-center space-x-1 w-full justify-center">
+                            <span class="h-[1px] w-full max-w-[90px] bg-amber-500/70 shadow-[0_0_6px_rgba(245,158,11,0.5)]"></span>
+                            <span class="text-sm font-bold text-amber-400">›</span>
+                          </div>
+                        </template>
+                        <template x-if="comp.arrows.l2_l1 === 'none'">
+                          <div class="flex items-center space-x-1 w-full justify-center opacity-20">
+                            <span class="h-[1px] w-full max-w-[90px] bg-neutral-700"></span>
+                          </div>
+                        </template>
+                      </div>
+
+                      <!-- L1 Profiles (structured claims) -->
+                      <div class="flex flex-col items-center space-y-2">
+                        <span class="w-3.5 h-3.5 rounded-full flex-shrink-0"
+                              :class="comp.nodes.l1.state === 'active' ? 'bg-emerald-500 ring-4 ring-emerald-500/20' : 'bg-neutral-700'"></span>
+                        <div class="text-center">
+                          <div class="text-xs font-bold"
+                               :class="comp.nodes.l1.state === 'active' ? 'text-emerald-400' : 'text-neutral-600'">L1 Profiles</div>
+                          <div class="text-[11px] font-sans mt-0.5"
+                               :class="comp.nodes.l1.state === 'active' ? 'text-emerald-300 font-medium' : 'text-neutral-600'"
+                               x-text="comp.nodes.l1.label"></div>
+                        </div>
+                      </div>
+
+                      <!-- Arrow L1 <-> L0 -->
+                      <div class="flex items-center space-x-1 pb-6 px-3 flex-1 justify-center">
+                        <template x-if="comp.arrows.l1_l0 === 'left'">
+                          <div class="flex items-center space-x-1 w-full justify-center">
+                            <span class="text-sm font-bold text-emerald-400">‹</span>
+                            <span class="h-[1px] w-full max-w-[90px] bg-emerald-500/70 shadow-[0_0_6px_rgba(16,185,129,0.5)]"></span>
+                          </div>
+                        </template>
+                        <template x-if="comp.arrows.l1_l0 === 'right'">
+                          <div class="flex items-center space-x-1 w-full justify-center">
+                            <span class="h-[1px] w-full max-w-[90px] bg-emerald-500/70 shadow-[0_0_6px_rgba(16,185,129,0.5)]"></span>
+                            <span class="text-sm font-bold text-emerald-400">›</span>
+                          </div>
+                        </template>
+                        <template x-if="comp.arrows.l1_l0 === 'none'">
+                          <div class="flex items-center space-x-1 w-full justify-center opacity-20">
+                            <span class="h-[1px] w-full max-w-[90px] bg-neutral-700"></span>
+                          </div>
+                        </template>
+                      </div>
+
+                      <!-- L0 Abstract (what the AI sees) -->
+                      <div class="flex flex-col items-center space-y-2">
+                        <span class="w-3.5 h-3.5 rounded-full flex-shrink-0"
+                              :class="comp.nodes.l0.state === 'active' ? 'bg-blue-500 ring-4 ring-blue-500/20' : 'bg-neutral-700'"></span>
+                        <div class="text-center">
+                          <div class="text-xs font-bold"
+                               :class="comp.nodes.l0.state === 'active' ? 'text-blue-400' : 'text-neutral-600'">L0 Abstract</div>
+                          <div class="text-[11px] font-sans mt-0.5"
+                               :class="comp.nodes.l0.state === 'active' ? 'text-blue-300 font-medium' : 'text-neutral-600'"
+                               x-text="comp.nodes.l0.label"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Side-by-side INPUT and OUTPUT Blocks -->
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- INPUT Block -->
+                    <div class="bg-brand-black/90 rounded-xl p-4 border border-brand-border/80 flex flex-col justify-between">
+                      <div>
+                        <div class="flex items-center justify-between mb-2">
+                          <span class="text-[10px] text-neutral-500 font-mono uppercase tracking-wider">INPUT</span>
+                        </div>
+                        <div class="space-y-1 font-mono text-[11px] text-neutral-300">
+                          <template x-for="(line, idx) in getComponentInput(comp).fields" :key="idx">
+                            <div class="truncate" x-text="line"></div>
+                          </template>
+                          <template x-if="getComponentInput(comp).more">
+                            <div class="text-[10px] text-neutral-500 pt-0.5" x-text="getComponentInput(comp).more"></div>
+                          </template>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- OUTPUT Block -->
+                    <div class="bg-brand-black/90 rounded-xl p-4 border border-brand-border/80 flex flex-col justify-between">
+                      <div>
+                        <div class="flex items-center justify-between mb-2">
+                          <span class="text-[10px] text-neutral-500 font-mono uppercase tracking-wider">OUTPUT</span>
+                          <span class="text-[9px] font-mono px-1.5 py-0.5 rounded uppercase font-semibold"
+                                :class="getComponentOutput(comp).tag === 'live' ? 'bg-emerald-950/60 border border-emerald-500/40 text-emerald-400' : 'bg-neutral-900 border border-neutral-700 text-neutral-400'"
+                                x-text="getComponentOutput(comp).tag"></span>
+                        </div>
+                        <div class="space-y-1 font-mono text-[11px] text-neutral-300">
+                          <template x-for="(line, idx) in getComponentOutput(comp).fields" :key="idx">
+                            <div class="truncate" x-text="line"></div>
+                          </template>
+                          <template x-if="getComponentOutput(comp).more">
+                            <div class="text-[10px] text-neutral-500 pt-0.5" x-text="getComponentOutput(comp).more"></div>
+                          </template>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+
   </main>
 
   <!-- Application Logic (Alpine.js) -->
@@ -738,6 +987,374 @@
         byteScanResult: null,
         receiptsList: [],
         benchmarkData: {},
+
+        // Tier cards collapse / expand states (default collapsed)
+        l0Expanded: false,
+        l1FrontmatterExpanded: false,
+        l1BodyExpanded: false,
+        l2Expanded: false,
+
+        // CORE ENGINE panel state — independent of selectedNamespace
+        selectedComponent: 'bridge.recall()',
+        coreComponents: [
+          {
+            name: 'bridge.recall()',
+            job: 'Packs 3-tier context within budget limit',
+            purpose: 'Packs multi-tier context within token budget or honestly abstains.',
+            file: 'core/bridge.py:515-722',
+            nodes: {
+              l2: { state: 'active', label: 'reads source byte spans' },
+              l1: { state: 'active', label: 'scores active claims' },
+              l0: { state: 'active', label: 'reads L0 abstract file' },
+            },
+            arrows: {
+              l2_l1: 'right',
+              l1_l0: 'right',
+            },
+          },
+          {
+            name: 'bridge.remember()',
+            job: 'Ingests facts and compiles OKF profiles',
+            purpose: 'Appends raw provenance and compiles structured OKF claims.',
+            file: 'core/bridge.py:281-432',
+            nodes: {
+              l2: { state: 'active', label: 'writes raw sources' },
+              l1: { state: 'active', label: 'writes claims and profile' },
+              l0: { state: 'dimmed', label: 'not used' },
+            },
+            arrows: {
+              l2_l1: 'right',
+              l1_l0: 'none',
+            },
+          },
+          {
+            name: 'bridge.explain()',
+            job: 'Resolves claim provenance to raw bytes',
+            purpose: 'Drills down from structured claim to immutable source bytes.',
+            file: 'core/bridge.py:724-781',
+            nodes: {
+              l2: { state: 'active', label: 'reads exact byte slice' },
+              l1: { state: 'active', label: 'reads claim triple' },
+              l0: { state: 'dimmed', label: 'not used' },
+            },
+            arrows: {
+              l2_l1: 'left',
+              l1_l0: 'none',
+            },
+          },
+          {
+            name: 'bridge.quarantine_list()',
+            job: 'Lists suspicious claims flagged by scanner',
+            purpose: 'Inspects injection detections held in quarantine before commit.',
+            file: 'core/bridge.py:824-871',
+            nodes: {
+              l2: { state: 'active', label: 'reads raw source quote' },
+              l1: { state: 'active', label: 'reads quarantined claims' },
+              l0: { state: 'dimmed', label: 'not used' },
+            },
+            arrows: {
+              l2_l1: 'right',
+              l1_l0: 'none',
+            },
+          },
+          {
+            name: 'bridge.confirm_quarantine()',
+            job: 'Promotes or purges quarantined memory',
+            purpose: 'Applies human-in-the-loop audit decision to quarantined claims.',
+            file: 'core/bridge.py:873-921',
+            nodes: {
+              l2: { state: 'dimmed', label: 'not verified' },
+              l1: { state: 'active', label: 'writes updated claim status' },
+              l0: { state: 'dimmed', label: 'not used' },
+            },
+            arrows: {
+              l2_l1: 'none',
+              l1_l0: 'none',
+            },
+          },
+          {
+            name: 'bridge.forget()',
+            job: 'Cryptographic unlearning and binary redaction',
+            purpose: 'Redacts source bytes, vacuums SQLite, and records HMAC receipt.',
+            file: 'core/bridge.py:923-1060',
+            nodes: {
+              l2: { state: 'active', label: 'redacts raw source bytes' },
+              l1: { state: 'active', label: 'deletes claims and vacuums' },
+              l0: { state: 'dimmed', label: 'not verified' },
+            },
+            arrows: {
+              l2_l1: 'left',
+              l1_l0: 'none',
+            },
+          },
+          {
+            name: 'scanner.live_byte_scan()',
+            job: 'Inspects raw disk and runs probes',
+            purpose: 'Scans raw binary storage and verifies zero residual memory bytes.',
+            file: 'dashboard/server.py:267-335',
+            nodes: {
+              l2: { state: 'active', label: 'scans raw source files' },
+              l1: { state: 'active', label: 'scans sqlite and wal' },
+              l0: { state: 'active', label: 'runs ten recall probes' },
+            },
+            arrows: {
+              l2_l1: 'right',
+              l1_l0: 'right',
+            },
+          },
+          {
+            name: 'handoff.create_handoff()',
+            job: 'Creates context-preserving session transfer',
+            purpose: 'Compiles multi-turn session state into compact OKF profile format.',
+            file: 'core/handoff.py:190-368',
+            nodes: {
+              l2: { state: 'active', label: 'reads session transcript tokens' },
+              l1: { state: 'active', label: 'writes handoff profile file' },
+              l0: { state: 'dimmed', label: 'not verified' },
+            },
+            arrows: {
+              l2_l1: 'right',
+              l1_l0: 'none',
+            },
+          },
+          {
+            name: 'token_utils.count_tokens()',
+            job: 'Calculates prompt tokens for budgets',
+            purpose: 'Measures exact token counts across all memory tiers for packing.',
+            file: 'core/handoff.py:60-74',
+            nodes: {
+              l2: { state: 'active', label: 'counts source raw tokens' },
+              l1: { state: 'active', label: 'counts okf profile tokens' },
+              l0: { state: 'active', label: 'counts abstract prompt tokens' },
+            },
+            arrows: {
+              l2_l1: 'right',
+              l1_l0: 'right',
+            },
+          },
+        ],
+
+        getActiveComponent() {
+          return this.coreComponents.find(c => c.name === this.selectedComponent) || this.coreComponents[0];
+        },
+
+        getComponentInput(comp) {
+          const map = {
+            'bridge.recall()': {
+              fields: ['namespace: str', 'query: str', 'token_budget: int = 800'],
+              more: null
+            },
+            'bridge.remember()': {
+              fields: ['namespace: str', 'text: str', 'origin: str = "agent_interaction"', 'memory_root: Path = None'],
+              more: null
+            },
+            'bridge.explain()': {
+              fields: ['namespace: str', 'claim_id: str', 'memory_root: Path = None'],
+              more: null
+            },
+            'bridge.quarantine_list()': {
+              fields: ['namespace: str', 'memory_root: Path = None'],
+              more: null
+            },
+            'bridge.confirm_quarantine()': {
+              fields: ['namespace: str', 'claim_id: str', 'action: str = "approve"'],
+              more: null
+            },
+            'bridge.forget()': {
+              fields: ['namespace: str', 'target: str', 'memory_root: Path = None'],
+              more: null
+            },
+            'scanner.live_byte_scan()': {
+              fields: ['namespace: str', 'query: str'],
+              more: null
+            },
+            'handoff.create_handoff()': {
+              fields: ['namespace: str', 'task_id: str', 'goal: str', 'completed_steps: list[str]', 'pending_steps: list[str]', 'open_questions: list[str]'],
+              more: '+2 more'
+            },
+            'token_utils.count_tokens()': {
+              fields: ['text: str'],
+              more: null
+            }
+          };
+          return map[comp?.name] || { fields: ['query: str'], more: null };
+        },
+
+        getComponentOutput(comp) {
+          if (comp?.name === 'bridge.recall()') {
+            if (this.recallResult) {
+              return {
+                tag: 'live',
+                fields: [
+                  `status: "${this.recallResult.status}"`,
+                  `answer_hint: "${(this.recallResult.answer_hint || '').slice(0, 22)}${(this.recallResult.answer_hint || '').length > 22 ? '...' : ''}"`,
+                  `tokens_used: ${this.recallResult.tokens_used}`,
+                  `latency_ms: ${Number(this.recallResult.latency_ms || 0).toFixed(1)}`,
+                  `l1_claims: ${(this.recallResult.l1_claims || []).length} items`,
+                  `l2_quotes: ${(this.recallResult.l2_quotes || []).length} items`
+                ],
+                more: '+2 more'
+              };
+            }
+            return {
+              tag: 'shape only',
+              fields: [
+                'status: shape only',
+                'answer_hint: shape only',
+                'l0_abstract: shape only',
+                'l1_claims: shape only',
+                'l2_quotes: shape only',
+                'tokens_used: shape only'
+              ],
+              more: '+2 more'
+            };
+          }
+
+          if (comp?.name === 'scanner.live_byte_scan()') {
+            if (this.byteScanResult) {
+              return {
+                tag: 'live',
+                fields: [
+                  `verdict: "${this.byteScanResult.verdict}"`,
+                  `total_matches: ${this.byteScanResult.total_matches}`,
+                  `probe_result: "${(this.byteScanResult.probe_result || '').slice(0, 24)}..."`,
+                  `sqlite_matches: ${this.byteScanResult.sqlite_matches}`,
+                  `wal_matches: ${this.byteScanResult.wal_matches}`,
+                  `source_matches: ${this.byteScanResult.source_matches}`
+                ],
+                more: '+6 more'
+              };
+            }
+            return {
+              tag: 'shape only',
+              fields: [
+                'verdict: shape only',
+                'total_matches: shape only',
+                'probe_result: shape only',
+                'sqlite_matches: shape only',
+                'wal_matches: shape only',
+                'source_matches: shape only'
+              ],
+              more: '+6 more'
+            };
+          }
+
+          if (comp?.name === 'bridge.quarantine_list()') {
+            if (this.quarantinedList && this.quarantinedList.length > 0) {
+              const first = this.quarantinedList[0];
+              return {
+                tag: 'live',
+                fields: [
+                  `namespace: "${this.selectedNamespace}"`,
+                  `quarantined_count: ${this.quarantinedCount}`,
+                  `claim_id: "${first.claim_id || ''}"`,
+                  `threat_reason: "${(first.threat_reason || '').slice(0, 22)}..."`,
+                  `trust_tier: ${first.trust_tier || 1}`,
+                  `status: "${first.status || 'quarantined'}"`
+                ],
+                more: this.quarantinedList.length > 1 ? `+${this.quarantinedList.length - 1} more claims` : null
+              };
+            }
+            return {
+              tag: 'shape only',
+              fields: [
+                'namespace: shape only',
+                'quarantined: shape only',
+                'claim_id: shape only',
+                'threat_reason: shape only',
+                'trust_tier: shape only',
+                'quote: shape only'
+              ],
+              more: '+6 more'
+            };
+          }
+
+          if (comp?.name === 'bridge.remember()') {
+            return {
+              tag: 'shape only',
+              fields: [
+                'status: shape only',
+                'source_id: shape only',
+                'quarantined: shape only',
+                'claims: shape only'
+              ],
+              more: null
+            };
+          }
+
+          if (comp?.name === 'bridge.explain()') {
+            return {
+              tag: 'shape only',
+              fields: [
+                'claim_id: shape only',
+                'namespace: shape only',
+                'subject: shape only',
+                'predicate: shape only',
+                'object_val: shape only',
+                'exact_source_slice: shape only'
+              ],
+              more: '+10 more'
+            };
+          }
+
+          if (comp?.name === 'bridge.confirm_quarantine()') {
+            return {
+              tag: 'shape only',
+              fields: [
+                'claim_id: shape only',
+                'status: shape only',
+                'message: shape only'
+              ],
+              more: null
+            };
+          }
+
+          if (comp?.name === 'bridge.forget()') {
+            return {
+              tag: 'shape only',
+              fields: [
+                'receipt_id: shape only',
+                'namespace: shape only',
+                'target: shape only',
+                'deleted_claim_ids: shape only',
+                'byte_scan_matches: shape only',
+                'probe_abstentions: shape only'
+              ],
+              more: '+6 more'
+            };
+          }
+
+          if (comp?.name === 'handoff.create_handoff()') {
+            return {
+              tag: 'shape only',
+              fields: [
+                'packet_id: shape only',
+                'task_id: shape only',
+                'goal: shape only',
+                'status: shape only',
+                'handoff_tokens: shape only',
+                'tokens_used: shape only'
+              ],
+              more: '+18 more'
+            };
+          }
+
+          if (comp?.name === 'token_utils.count_tokens()') {
+            return {
+              tag: 'shape only',
+              fields: [
+                'tokens: shape only'
+              ],
+              more: null
+            };
+          }
+
+          return {
+            tag: 'shape only',
+            fields: ['status: shape only'],
+            more: null
+          };
+        },
 
         async initApp() {
           await this.loadNamespaces();
@@ -785,6 +1402,50 @@
         getL2TotalTokens() {
           if (!this.namespaceData.l2_sources) return 0;
           return this.namespaceData.l2_sources.reduce((sum, s) => sum + (s.tokens || 0), 0);
+        },
+
+        getL0Summary() {
+          const text = this.namespaceData.l0 ? this.namespaceData.l0.content : '';
+          if (!text) return 'Loading L0 abstract...';
+          const lines = text.split('\n').filter(l => l.trim().length > 0);
+          if (lines.length === 0) return '';
+          const heading = lines[0];
+          const rest = lines.slice(1).join(' ').trim();
+          const match = rest.match(/.*?[.!?](?:\s|$)/);
+          const firstSentence = match ? match[0].trim() : rest;
+          return heading + '\n\n' + firstSentence;
+        },
+
+        getL1CollapsedFrontmatter() {
+          if (!this.namespaceData.l1_files || !this.namespaceData.l1_files[this.activeL1FileIdx]) return '{}';
+          const fm = this.namespaceData.l1_files[this.activeL1FileIdx].frontmatter || {};
+          const filtered = {};
+          if ('namespace' in fm) filtered.namespace = fm.namespace;
+          if ('active_claims' in fm) filtered.active_claims = fm.active_claims;
+          if ('quarantined_claims' in fm) filtered.quarantined_claims = fm.quarantined_claims;
+          return JSON.stringify(filtered, null, 2);
+        },
+
+        getL1Footnotes() {
+          if (!this.namespaceData.l1_files || !this.namespaceData.l1_files[this.activeL1FileIdx]) return [];
+          const body = this.namespaceData.l1_files[this.activeL1FileIdx].body || '';
+          const matches = [...body.matchAll(/\[\^([a-zA-Z0-9_\-]+)\]/g)];
+          const seen = new Set();
+          const list = [];
+          for (const m of matches) {
+            if (!seen.has(m[1])) {
+              seen.add(m[1]);
+              list.push(m[1]);
+            }
+          }
+          return list;
+        },
+
+        renderL2FirstLine() {
+          const content = this.renderL2SourceContent();
+          if (!content) return '';
+          const idx = content.indexOf('\n');
+          return idx !== -1 ? content.substring(0, idx) : content;
         },
 
         renderL1Markdown(text) {
@@ -951,7 +1612,11 @@
 
     // Global helper for footnote click highlight in L2
     window.triggerHighlight = function(srcId) {
-      const app = document.querySelector('[x-data]').__x.$data;
+      const el = document.querySelector('[x-data]');
+      if (!el) return;
+      const app = (window.Alpine && typeof Alpine.$data === 'function')
+        ? Alpine.$data(el)
+        : (el.__x ? el.__x.$data : null);
       if (!app) return;
       // Find claim or source corresponding to srcId
       const claim = app.claims.find(c => c.source_id === srcId);
