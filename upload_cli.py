@@ -295,6 +295,117 @@ def collect_target_files(target: Path) -> Tuple[List[Path], bool]:
     raise FileNotFoundError(f"Path not found: {target}")
 
 
+def chunk_document_text(
+    text: str,
+    doc_type: str = "TEXT",
+    max_chars: int = 400,
+) -> List[str]:
+    """Split extracted document text into compact, section-aware chunks.
+
+    Keeps small JSON documents intact so nested keys inherit top-level service/owner
+    context, while splitting multi-section Markdown/PDF/Office/CSV documents along
+    structural boundaries and capping chunk size so fallback ``has_note`` claims
+    never truncate past 400 chars.
+    """
+    stripped = text.strip()
+    if not stripped:
+        return []
+
+    if doc_type == "JSON" and len(stripped) <= 2000:
+        return [stripped]
+
+    # Split at blank lines, page/slide/sheet markers, or markdown headings
+    raw_sections = re.split(
+        r"\n\s*\n+|(?=\[(?:Page|Slide)\s+\d+\])|(?=^##\s+Sheet:)|(?=^#{1,6}\s+)",
+        stripped,
+        flags=re.MULTILINE,
+    )
+    sections = [s.strip() for s in raw_sections if s and s.strip()]
+
+    # Attach standalone short markdown headings to the following section
+    merged_sections: List[str] = []
+    i = 0
+    while i < len(sections):
+        sec = sections[i]
+        if (
+            re.match(r"^#{1,6}\s+\S", sec)
+            and "\n" not in sec
+            and len(sec) <= 100
+            and i + 1 < len(sections)
+        ):
+            combined = f"{sec}\n\n{sections[i + 1]}"
+            merged_sections.append(combined)
+            i += 2
+            continue
+        merged_sections.append(sec)
+        i += 1
+
+    chunks: List[str] = []
+    for sec in merged_sections:
+        if len(sec) <= max_chars:
+            chunks.append(sec)
+            continue
+
+        # Sub-split oversized sections along line boundaries, then sentence/word bounds
+        current_lines: List[str] = []
+        current_len = 0
+        for line in sec.splitlines():
+            line_len = len(line)
+            if line_len > max_chars:
+                if current_lines:
+                    chunks.append("\n".join(current_lines).strip())
+                    current_lines = []
+                    current_len = 0
+                sentences = re.split(r"(?<=[.!?])\s+", line.strip())
+                buf = ""
+                for sent in sentences:
+                    if not sent:
+                        continue
+                    if len(sent) > max_chars:
+                        if buf:
+                            chunks.append(buf)
+                            buf = ""
+                        words = sent.split()
+                        wbuf = ""
+                        for w in words:
+                            cand = f"{wbuf} {w}".strip() if wbuf else w
+                            if len(cand) <= max_chars:
+                                wbuf = cand
+                            else:
+                                if wbuf:
+                                    chunks.append(wbuf)
+                                wbuf = w[:max_chars]
+                        if wbuf:
+                            chunks.append(wbuf)
+                    else:
+                        cand = f"{buf} {sent}".strip() if buf else sent
+                        if len(cand) <= max_chars:
+                            buf = cand
+                        else:
+                            if buf:
+                                chunks.append(buf)
+                            buf = sent
+                if buf:
+                    chunks.append(buf)
+                continue
+
+            added = line_len + (1 if current_lines else 0)
+            if current_lines and current_len + added > max_chars:
+                chunks.append("\n".join(current_lines).strip())
+                current_lines = [line]
+                current_len = line_len
+            else:
+                current_lines.append(line)
+                current_len += added
+
+        if current_lines:
+            tail = "\n".join(current_lines).strip()
+            if tail:
+                chunks.append(tail)
+
+    return [c for c in chunks if c.strip()]
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Upload any document or folder of documents into Knowledge Brain."
@@ -313,9 +424,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "-o",
         "--origin",
-        default="doc",
+        default="user",
         choices=["user", "tool", "doc"],
-        help="Trust tier origin passed to ingest_message() (default: doc).",
+        help="Trust tier origin passed to ingest_message() (default: user; use 'doc' to quarantine untrusted external files).",
     )
     parser.add_argument(
         "--dry-run",
@@ -372,11 +483,13 @@ def main(argv: Optional[List[str]] = None) -> int:
 
             char_count = len(text)
             token_count = count_tokens(text)
+            chunks = chunk_document_text(text, doc_type=doc_type)
 
             if args.dry_run:
                 print(
                     f"[{doc_type:<8}] {display_name:<40} | "
-                    f"{char_count:>7,} chars | {token_count:>6,} tokens | dry-run"
+                    f"{char_count:>7,} chars | {token_count:>6,} tokens | "
+                    f"{len(chunks):>2} chunk(s) | dry-run"
                 )
                 total_processed += 1
                 total_tokens += token_count
@@ -384,20 +497,22 @@ def main(argv: Optional[List[str]] = None) -> int:
 
             t0 = time.perf_counter()
             assert store is not None
-            claims = ingest_message(
-                store=store,
-                namespace=args.namespace,
-                text=text,
-                origin=args.origin,
-                session_id=file_path.stem,
-            )
+            claim_ids: List[str] = []
+            for chunk in chunks:
+                chunk_claims = ingest_message(
+                    store=store,
+                    namespace=args.namespace,
+                    text=chunk,
+                    origin=args.origin,
+                    session_id=file_path.stem,
+                )
+                claim_ids.extend(c["claim_id"] for c in chunk_claims if "claim_id" in c)
             elapsed_ms = (time.perf_counter() - t0) * 1000.0
-            claim_ids = [c["claim_id"] for c in claims if "claim_id" in c]
 
             print(
                 f"[{doc_type:<8}] {display_name:<40} | "
                 f"{char_count:>7,} chars | {token_count:>6,} tokens | "
-                f"{len(claim_ids):>3} claim(s) | {elapsed_ms:>7.1f} ms"
+                f"{len(chunks):>2} chunk(s) | {len(claim_ids):>3} claim(s) | {elapsed_ms:>7.1f} ms"
             )
             total_processed += 1
             total_claims += len(claim_ids)

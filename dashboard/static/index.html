@@ -94,7 +94,7 @@
       </div>
     </div>
 
-    <!-- 6 Tab Navigation Header -->
+    <!-- 7 Tab Navigation Header -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-4 xl:px-8 flex space-x-1 border-t border-brand-border/30 overflow-x-auto">
       <button @click="activeTab = 'tab1'"
               :class="activeTab === 'tab1' ? 'text-white border-white' : 'text-neutral-400 border-transparent hover:text-neutral-200'"
@@ -131,6 +131,12 @@
               :class="activeTab === 'tab6' ? 'text-white border-white' : 'text-neutral-400 border-transparent hover:text-neutral-200'"
               class="py-3 px-2.5 lg:px-3 xl:px-4 text-[11px] xl:text-xs font-medium border-b-2 transition flex items-center whitespace-nowrap font-quantico tracking-wide flex-shrink-0">
         <span>Core Engine</span>
+      </button>
+
+      <button @click="activeTab = 'tab7'; loadHandoffState()"
+              :class="activeTab === 'tab7' ? 'text-white border-white' : 'text-neutral-400 border-transparent hover:text-neutral-200'"
+              class="py-3 px-2.5 lg:px-3 xl:px-4 text-[11px] xl:text-xs font-medium border-b-2 transition flex items-center whitespace-nowrap font-quantico tracking-wide flex-shrink-0">
+        <span>Cross-Agent Handoff</span>
       </button>
     </div>
   </header>
@@ -982,6 +988,93 @@
       </div>
     </div>
 
+    <!-- ================================================================= -->
+    <!-- TAB 7: INTERACTIVE CROSS-AGENT HANDOFF (OKF v0.2) -->
+    <!-- ================================================================= -->
+    <div x-show="activeTab === 'tab7'" x-cloak class="space-y-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-xl font-bold text-white tracking-tight">Interactive Cross-Agent Handoff (OKF v0.2)</h2>
+          <p class="text-xs text-neutral-400">Package Agent 1 architectural decisions into tasks.okf.md and verify cold-start Agent 2 recovery with staleness checks.</p>
+        </div>
+        <button @click="loadHandoffState()"
+                class="text-xs px-3 py-1.5 rounded-xl bg-brand-surface border border-brand-border text-neutral-200 hover:bg-neutral-800 transition font-mono">
+          Cold-Start Agent 2 (handoff_get)
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Agent 1 Checkpoint Form -->
+        <div class="glass-panel rounded-2xl p-5 border border-brand-border space-y-4">
+          <div class="text-xs font-bold text-blue-300 uppercase tracking-wider font-quantico">Stage 1: Agent 1 (Architect / Planner)</div>
+          <div class="space-y-3 text-xs">
+            <div>
+              <label class="block text-neutral-400 mb-1">Task ID</label>
+              <input type="text" x-model="handoffForm.task_id" class="w-full px-3 py-2 rounded-xl bg-brand-black border border-brand-border text-white font-mono">
+            </div>
+            <div>
+              <label class="block text-neutral-400 mb-1">Task Goal</label>
+              <input type="text" x-model="handoffForm.goal" class="w-full px-3 py-2 rounded-xl bg-brand-black border border-brand-border text-white">
+            </div>
+            <div>
+              <label class="block text-neutral-400 mb-1">Decisions (one per line)</label>
+              <textarea x-model="handoffForm.decisionsText" rows="2" class="w-full px-3 py-2 rounded-xl bg-brand-black border border-brand-border text-white font-mono"></textarea>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-neutral-400 mb-1">Completed Steps (one per line)</label>
+                <textarea x-model="handoffForm.completedText" rows="2" class="w-full px-3 py-2 rounded-xl bg-brand-black border border-brand-border text-white"></textarea>
+              </div>
+              <div>
+                <label class="block text-neutral-400 mb-1">Pending Steps (one per line)</label>
+                <textarea x-model="handoffForm.pendingText" rows="2" class="w-full px-3 py-2 rounded-xl bg-brand-black border border-brand-border text-white"></textarea>
+              </div>
+            </div>
+            <button @click="createInteractiveHandoff()"
+                    class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition">
+              Create OKF v0.2 Handoff Checkpoint
+            </button>
+          </div>
+        </div>
+
+        <!-- Agent 2 Cold-Start Recovery -->
+        <div class="glass-panel rounded-2xl p-5 border border-brand-border space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-emerald-300 uppercase tracking-wider font-quantico">Stage 2: Agent 2 Cold-Start Recovery</span>
+            <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-emerald-950/60 border border-emerald-500/30 text-emerald-400"
+                  x-show="handoffPacket && handoffPacket.exists"
+                  x-text="'~' + (handoffPacket.handoff_tokens || 0) + ' tokens'"></span>
+          </div>
+
+          <template x-if="!handoffPacket || !handoffPacket.exists">
+            <div class="p-6 rounded-xl bg-brand-black border border-brand-border text-xs text-neutral-400 font-mono">
+              No tasks.okf.md checkpoint exists yet for this namespace. Create one on the left to test cross-agent recovery.
+            </div>
+          </template>
+
+          <template x-if="handoffPacket && handoffPacket.exists">
+            <div class="space-y-3 text-xs font-mono">
+              <div class="p-3 rounded-xl bg-brand-black border border-brand-border space-y-1">
+                <div><span class="text-neutral-500">Goal:</span> <span class="text-white" x-text="handoffPacket.goal"></span></div>
+                <div><span class="text-neutral-500">Status:</span> <span class="text-emerald-400" x-text="handoffPacket.status"></span></div>
+                <div><span class="text-neutral-500">Relied-on Claims:</span> <span class="text-blue-300" x-text="(handoffPacket.relied_on_claims || []).length"></span></div>
+              </div>
+              <template x-if="handoffPacket.stale_warnings && handoffPacket.stale_warnings.length > 0">
+                <div class="p-3 rounded-xl bg-amber-950/40 border border-amber-500/40 text-amber-300">
+                  <div class="font-bold mb-1">Staleness Warnings Detected:</div>
+                  <template x-for="w in handoffPacket.stale_warnings" :key="w">
+                    <div x-text="'• ' + w"></div>
+                  </template>
+                </div>
+              </template>
+              <div class="p-3 rounded-xl bg-brand-black border border-brand-border max-h-64 overflow-y-auto whitespace-pre-wrap text-[11px] text-neutral-300"
+                   x-text="handoffPacket.raw_okf_markdown || ''"></div>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+
   </main>
 
   <!-- Application Logic (Alpine.js) -->
@@ -1006,6 +1099,14 @@
         byteScanResult: null,
         receiptsList: [],
         benchmarkData: {},
+        handoffPacket: null,
+        handoffForm: {
+          task_id: 'realtime_demo_task',
+          goal: 'Payment service database migration from MongoDB to PostgreSQL 16 with uuidv7 keys.',
+          decisionsText: 'Target database is PostgreSQL 16.\nPrimary key format is uuidv7.',
+          completedText: 'Step 1: DDL Schema generated (step1_schema.sql)',
+          pendingText: 'Step 2: Implement idempotent dual-write backfill worker'
+        },
 
         // Tier cards collapse / expand states (default collapsed)
         l0Expanded: false,
@@ -1329,6 +1430,21 @@
           }
 
           if (comp?.name === 'bridge.forget()') {
+            if (this.receiptsList && this.receiptsList.length > 0) {
+              const latest = this.receiptsList[0];
+              return {
+                tag: 'live',
+                fields: [
+                  `receipt_id: "${latest.receipt_id || ''}"`,
+                  `namespace: "${this.selectedNamespace}"`,
+                  `target: "${latest.target || ''}"`,
+                  `sqlite_byte_matches: ${latest.sqlite_byte_matches ?? 0}`,
+                  `filesystem_byte_matches: ${latest.filesystem_byte_matches ?? 0}`,
+                  `probe_abstentions: "${latest.probe_abstentions || ''}"`
+                ],
+                more: this.receiptsList.length > 1 ? `+${this.receiptsList.length - 1} more receipts` : null
+              };
+            }
             return {
               tag: 'shape only',
               fields: [
@@ -1344,6 +1460,20 @@
           }
 
           if (comp?.name === 'handoff.create_handoff()') {
+            if (this.handoffPacket && this.handoffPacket.exists) {
+              return {
+                tag: 'live',
+                fields: [
+                  `task_id: "${this.handoffPacket.task_id || ''}"`,
+                  `goal: "${(this.handoffPacket.goal || '').slice(0, 28)}..."`,
+                  `status: "${this.handoffPacket.status || 'in_progress'}"`,
+                  `handoff_tokens: ${this.handoffPacket.handoff_tokens || 0}`,
+                  `relied_on_claims: ${(this.handoffPacket.relied_on_claims || []).length}`,
+                  `stale_warnings: ${(this.handoffPacket.stale_warnings || []).length}`
+                ],
+                more: null
+              };
+            }
             return {
               tag: 'shape only',
               fields: [
@@ -1382,6 +1512,7 @@
           await this.loadQuarantine();
           await this.loadReceipts();
           await this.loadBenchmarks();
+          await this.loadHandoffState();
           // Initial byte scan on default target
           await this.runByteScan();
           this.$nextTick(() => { lucide.createIcons(); });
@@ -1407,6 +1538,7 @@
             await this.loadClaims();
             await this.loadQuarantine();
             await this.loadReceipts();
+            await this.loadHandoffState();
             this.$nextTick(() => { lucide.createIcons(); });
           } catch (e) {
             console.error('Error loading namespace details:', e);
@@ -1624,6 +1756,37 @@
             this.benchmarkData = await res.json();
           } catch (e) {
             console.error('Error loading benchmarks:', e);
+          }
+        },
+
+        async loadHandoffState() {
+          try {
+            const res = await fetch(`/api/handoff/${this.selectedNamespace}?task_id=${encodeURIComponent(this.handoffForm.task_id)}`);
+            this.handoffPacket = await res.json();
+          } catch (e) {
+            console.error('Error loading handoff state:', e);
+          }
+        },
+
+        async createInteractiveHandoff() {
+          try {
+            const res = await fetch('/api/handoff/create', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                namespace: this.selectedNamespace,
+                task_id: this.handoffForm.task_id,
+                goal: this.handoffForm.goal,
+                decisions: this.handoffForm.decisionsText.split('\n').filter(Boolean),
+                completed_steps: this.handoffForm.completedText.split('\n').filter(Boolean),
+                pending_steps: this.handoffForm.pendingText.split('\n').filter(Boolean)
+              })
+            });
+            this.handoffPacket = await res.json();
+            await this.loadClaims();
+            await this.loadNamespaceData();
+          } catch (e) {
+            console.error('Error creating handoff:', e);
           }
         }
       }

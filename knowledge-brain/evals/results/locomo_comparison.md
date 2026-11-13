@@ -7,22 +7,28 @@
 
 ## Overall Comparison
 
-| Engine | Cat 1-4 Token Recall (%) | Cat 1-4 Best-Line F1 (%) | Cat 5 Abstention (%) | Mean Context Tokens | p50 Latency (ms) | Post-Delete Residual Bytes | Byte-Clean (%) |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| TraceZero | 45.17% | 20.28% | 65.96% | 379.4 | 105.74 | 0 | 100.0% |
-| OpenViking (openviking) | 62.07% | 28.85% | 0.00% | 1894.0 | 8.36 | 3 | 0.0% |
-| Mem0 (mem0ai) | 65.29% | 27.95% | 0.00% | 940.3 | 16.83 | 4 | 0.0% |
+| Engine | Cat 1-4 Token Recall (%) | Cat 1-4 Best-Line F1 (%) | Cat 5 Abstention (%) | All-Cat Score (1-5 %) | Mean Context Tokens | Recall / 1K Tok | p50 Latency (ms) | Post-Delete Residual Bytes | Byte-Clean (%) |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| TraceZero (Strict PS-06 Budget=800) | 61.08% | 25.78% | 59.57% | 60.72% | 621.5 | 98.3 | 192.38 | 0 | 100.0% |
+| TraceZero (Mid Budget=2000, ~OpenViking) | 69.22% | 28.93% | 59.57% | 66.94% | 1553.0 | 44.6 | 423.20 | 0 | 100.0% |
+| TraceZero (High Budget=7000, ~Mem0 Research) | 75.51% | 31.62% | 59.57% | 71.75% | 5486.1 | 13.8 | 864.56 | 0 | 100.0% |
+| OpenViking (openviking) | 62.07% | 28.85% | 0.00% | 47.41% | 1894.0 | 32.8 | 8.44 | 3 | 0.0% |
+| Mem0 (mem0ai) | 65.29% | 27.95% | 0.00% | 49.87% | 940.3 | 69.4 | 15.05 | 4 | 0.0% |
 
 ## Per-Category Breakdown
 
 | Engine | Single-Hop Recall (%) | Temporal Recall (%) | Multi-Hop Recall (%) | Open-Domain Recall (%) | Adversarial Abstention (%) |
 |---|---:|---:|---:|---:|---:|
-| TraceZero | 40.18% | 52.43% | 11.54% | 49.86% | 65.96% |
+| TraceZero (Strict PS-06 Budget=800) | 48.19% | 65.50% | 20.94% | 72.08% | 59.57% |
+| TraceZero (Mid Budget=2000, ~OpenViking) | 67.15% | 68.74% | 30.72% | 77.58% | 59.57% |
+| TraceZero (High Budget=7000, ~Mem0 Research) | 82.71% | 72.07% | 40.51% | 80.54% | 59.57% |
 | OpenViking (openviking) | 56.37% | 58.20% | 37.89% | 71.22% | 0.00% |
 | Mem0 (mem0ai) | 56.92% | 71.08% | 32.37% | 72.16% | 0.00% |
 
 ## Deletion & Forensic Audit Details
 
-- **TraceZero**: ingest=13.74s (419 items) | pre-delete secret byte matches=4 -> post-delete secret byte matches=0 | post-delete abstained=True
-- **OpenViking (openviking)**: ingest=28.00s (19 items) | pre-delete secret byte matches=3 -> post-delete secret byte matches=3 | post-delete abstained=False
-- **Mem0 (mem0ai)**: ingest=3.73s (419 items) | pre-delete secret byte matches=3 -> post-delete secret byte matches=4 | post-delete abstained=False
+- **TraceZero (Strict PS-06 Budget=800)**: ingest=15.11s (419 items) | pre-delete secret byte matches=4 -> post-delete secret byte matches=0 | post-delete abstained=True
+- **TraceZero (Mid Budget=2000, ~OpenViking)**: ingest=19.93s (419 items) | pre-delete secret byte matches=4 -> post-delete secret byte matches=0 | post-delete abstained=True
+- **TraceZero (High Budget=7000, ~Mem0 Research)**: ingest=11.67s (419 items) | pre-delete secret byte matches=4 -> post-delete secret byte matches=0 | post-delete abstained=True
+- **OpenViking (openviking)**: ingest=28.83s (19 items) | pre-delete secret byte matches=3 -> post-delete secret byte matches=3 | post-delete abstained=False
+- **Mem0 (mem0ai)**: ingest=8.64s (419 items) | pre-delete secret byte matches=3 -> post-delete secret byte matches=4 | post-delete abstained=False

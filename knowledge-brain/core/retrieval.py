@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 import time
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
 
 import tiktoken
@@ -53,26 +54,29 @@ PREDICATE_KEYWORDS: Dict[str, Set[str]] = {
 }
 
 
-def classify_query_route(query: str) -> str:
-    """Deterministic 0-LLM-token query router."""
-    q = query.lower()
+_TEMPORAL_ROUTE_RE = re.compile(
+    r"\b(?:what\s+changed|history|previously|former|timeline|used\s+to|superseded|historical|in\s+the\s+past)\b",
+    re.I,
+)
+_GRAPH_ROUTE_RE = re.compile(
+    r"\b(?:depends\s+on|dependency|dependencies|manages|managed\s+by|hierarchy|lineage|dependency\s+chain|graph\s+path|subordinates|reports\s+to)\b",
+    re.I,
+)
+_AGG_ROUTE_RE = re.compile(
+    r"\b(?:how\s+many|count\s+of|number\s+of|total\s+count|sum\s+of|average|aggregate|list\s+all\s+tasks|pending\s+tasks\s+count|tally)\b",
+    re.I,
+)
 
-    if any(k in q for k in [
-        "what changed", "history", "previously", "former", "timeline",
-        "past", "used to", "before", "prior", "superseded", "historical",
-    ]):
+
+def classify_query_route(query: str) -> str:
+    """Deterministic 0-LLM-token query router with word-boundary precision."""
+    if _TEMPORAL_ROUTE_RE.search(query):
         return "TEMPORAL_HISTORY"
 
-    if any(k in q for k in [
-        "depends on", "dependency", "dependencies", "manages", "managed by",
-        "hierarchy", "lineage", "chain", "path", "subordinates", "reports to",
-    ]):
+    if _GRAPH_ROUTE_RE.search(query):
         return "GRAPH_CTE"
 
-    if any(k in q for k in [
-        "how many", "count", "number of", "total", "sum", "average",
-        "aggregate", "list all tasks", "pending tasks count", "tally",
-    ]):
+    if _AGG_ROUTE_RE.search(query):
         return "SQL_AGGREGATE"
 
     return "HYBRID_TIERED"
@@ -106,11 +110,16 @@ def recall_context(
     route = classify_query_route(query)
     enc = get_tokenizer()
 
-    # Step 1: Hybrid Semantic + FTS5 search via MemoryStore
+    # Scale candidate pool dynamically with token_budget (~25 tokens per conversational claim)
+    dynamic_k = max(44 if token_budget >= 750 else 15, min(250, token_budget // 25))
+    high_budget_mode = token_budget >= 2500
+    max_conv_dist = 1.05 if high_budget_mode else 0.94
+
+    # Step 1: Hybrid Semantic + FTS5 search via MemoryStore (+ multi-hop sub-query expansion)
     vec_hits = store.search_hybrid(
         namespace=namespace,
         query=query,
-        top_k=18,
+        top_k=dynamic_k,
         include_superseded=(route == "TEMPORAL_HISTORY"),
     )
     active_vec_hits = [
@@ -171,7 +180,9 @@ def recall_context(
         "and", "or", "has", "have", "had", "go", "went", "do", "her", "his", "she",
         "he", "they", "their", "them", "this", "that", "from", "with", "about",
         "would", "could", "should", "can", "will", "after", "before", "during",
-        "likely", "realize", "mean", "feel",
+        "likely", "realize", "mean", "feel", "kind", "type", "sort", "partake",
+        "recently", "ever", "still", "much", "many", "times", "really", "just",
+        "very", "been", "being", "doing", "done", "thing", "things", "respect",
     }
     raw_content_terms = {
         t for t in re.findall(r"[a-z0-9]+", query.lower())
@@ -193,8 +204,44 @@ def recall_context(
         s in q_low for s in ("vault", "secret", "passphrase", "password", "passcode", "credential")
     )
 
+    # Multi-hop / multi-entity expansion: run focused per-subject or per-clause queries so one entity
+    # cannot crowd out another entity in top-k hybrid retrieval.
+    if not is_sensitive_query:
+        sub_queries: List[str] = []
+        if len(mentioned_subjects) >= 2 and query_content_terms:
+            kw_tail = " ".join(sorted(query_content_terms)[:6])
+            for subj in sorted(mentioned_subjects)[:3]:
+                sub_queries.append(f"{subj} {kw_tail}")
+        elif route == "GRAPH_CTE" or (
+            any(sep in q_low for sep in (" and ", " both ", " between ", " vs "))
+            and len(query_content_terms) >= 4
+        ):
+            parts = [p.strip() for p in re.split(r"\b(?:and|both|between|vs)\b", query, flags=re.I) if len(p.strip()) >= 8]
+            for p in parts[:2]:
+                sub_queries.append(p)
+        if sub_queries:
+            merged_by_id: Dict[str, Dict[str, Any]] = {h["claim_id"]: dict(h) for h in active_vec_hits}
+            for sq in sub_queries:
+                sub_hits = store.search_hybrid(
+                    namespace=namespace,
+                    query=sq,
+                    top_k=max(10, dynamic_k // 4),
+                    include_superseded=(route == "TEMPORAL_HISTORY"),
+                )
+                for sh in sub_hits:
+                    if route != "TEMPORAL_HISTORY" and sh.get("status") != "active":
+                        continue
+                    cid = sh["claim_id"]
+                    if cid in merged_by_id:
+                        existing = merged_by_id[cid]
+                        existing["distance"] = min(float(existing.get("distance", 999.0)), float(sh.get("distance", 999.0)))
+                        existing["_rrf_score"] = max(float(existing.get("_rrf_score", 0.0)), float(sh.get("_rrf_score", 0.0)))
+                    else:
+                        merged_by_id[cid] = dict(sh)
+            active_vec_hits = list(merged_by_id.values())
+
     def _stem(tok: str) -> str:
-        for suf in ("ingly", "edly", "ing", "ied", "ies", "ed", "es", "ly", "er", "s"):
+        for suf in ("ingly", "edly", "ing", "ied", "ies", "ed", "es", "ly", "er", "al", "s"):
             if len(tok) > len(suf) + 2 and tok.endswith(suf):
                 base = tok[: -len(suf)]
                 return base + ("y" if suf in ("ied", "ies") else "")
@@ -228,9 +275,23 @@ def recall_context(
         re.I,
     )
     second_person_re = re.compile(r"\b(?:you|you're|you've|you'd|your|yours|yourself)\b", re.I)
+    third_person_anecdote_re = re.compile(
+        r"\b(?:a\s+friend|my\s+friend|a\s+buddy|buddy\s+of\s+mine|a\s+colleague|someone\s+i\s+know)\b",
+        re.I,
+    )
 
     def _is_second_person_attribution(text: str) -> bool:
         body = re.sub(r"^(?:\[[^\]]+\]\s*)?[A-Za-z0-9_]+:\s*", "", text).strip()
+        body_terms = set(re.findall(r"[a-z0-9]+", body.lower()))
+        body_has_2p = bool(second_person_re.search(body))
+        turn_addresses_other = body_has_2p or any(
+            (other in body_terms) or (len(other) >= 4 and other[:3] in body_terms)
+            for other in other_subjects
+        )
+        turn_has_active_1p = bool(
+            first_person_own_re.search(body)
+            or (first_person_pron_re.search(body) and not reactive_first_person_re.search(body))
+        )
         clauses = [c.strip() for c in re.split(r"(?<=[.!?;])\s+", body) if c.strip()]
         flagged_2p = False
         for clause in clauses:
@@ -239,29 +300,68 @@ def recall_context(
             if not has_topic:
                 continue
 
+            if third_person_anecdote_re.search(clause):
+                flagged_2p = True
+                continue
+
             has_2p = bool(second_person_re.search(clause))
             has_1p_own = bool(first_person_own_re.search(clause))
             has_1p_pron = bool(first_person_pron_re.search(clause))
             is_reactive_1p = bool(reactive_first_person_re.search(clause))
 
-            if has_1p_own or (has_1p_pron and not is_reactive_1p and not has_2p and not clause.endswith("?")):
+            if (has_1p_own and not has_2p) or (has_1p_pron and not is_reactive_1p and not has_2p and not clause.endswith("?")):
                 return False
 
             if clause.endswith("?"):
                 flagged_2p = True
                 continue
 
-            if has_2p and not has_1p_own and (not has_1p_pron or is_reactive_1p):
+            if has_2p and (not has_1p_own or is_reactive_1p):
                 flagged_2p = True
                 continue
 
-            if not has_1p_own and not has_1p_pron:
-                for other in other_subjects:
-                    nick = other[:3] if len(other) >= 4 else other
-                    if other in clause_terms or (len(nick) >= 3 and nick in clause_terms):
-                        flagged_2p = True
-                        break
+            if not has_1p_own and not has_1p_pron and turn_addresses_other:
+                # If the speaker uses active 1st-person ownership in the turn and never uses 2nd-person "you/your",
+                # an opening greeting like "Hey Caroline, that roadtrip..." is still the speaker's own story.
+                if turn_has_active_1p and not body_has_2p:
+                    return False
+                flagged_2p = True
+                continue
         return flagged_2p
+
+    # Pre-scan contrastive other-speaker evidence when a single subject is named
+    other_best_matched = 0
+    other_best_dist = 999.0
+    subj_best_matched = 0
+    subj_best_dist = 999.0
+    if len(mentioned_subjects) == 1 and not is_sensitive_query and query_content_terms:
+        for h in active_vec_hits:
+            if h.get("predicate") not in ("has_note", "stated"):
+                continue
+            d_val = float(h.get("distance", 999.0))
+            h_subj = str(h.get("subject", "")).lower()
+            o_low = str(h.get("object_val", "")).lower()
+            o_terms = set(re.findall(r"[a-z0-9_]+", o_low)) | set(re.findall(r"[a-z0-9]+", o_low))
+            m_q = sum(1 for qt in query_content_terms if _term_in_vocab(qt, o_terms))
+            if h_subj in mentioned_subjects:
+                if not _is_second_person_attribution(str(h.get("object_val", ""))):
+                    subj_best_matched = max(subj_best_matched, m_q)
+                    subj_best_dist = min(subj_best_dist, d_val)
+            else:
+                obj_raw = str(h.get("object_val", "")).strip()
+                if not obj_raw.endswith("?") and not _is_second_person_attribution(obj_raw):
+                    other_best_matched = max(other_best_matched, m_q)
+                    other_best_dist = min(other_best_dist, d_val)
+    other_dominates_topic = (
+        len(mentioned_subjects) == 1
+        and not re.search(r"\b(?:would|likely|might)\b", q_low)
+        and other_best_matched >= 2
+        and other_best_matched > subj_best_matched
+        and (
+            subj_best_matched == 0
+            or (other_best_dist + 0.05 < subj_best_dist and subj_best_matched <= 1 and subj_best_dist > 0.68)
+        )
+    )
 
     # Filter semantic hits: separate strict abstention gate from secondary evidence expansion
     strict_vec_hits: List[Dict[str, Any]] = []
@@ -301,14 +401,21 @@ def recall_context(
             continue
 
         obj_text = str(h.get("object_val", "")).lower()
-        obj_terms = set(re.findall(r"[a-z0-9_]+", obj_text))
+        obj_terms = set(re.findall(r"[a-z0-9_]+", obj_text)) | set(re.findall(r"[a-z0-9]+", obj_text))
         matched_q = sum(1 for qt in query_content_terms if _term_in_vocab(qt, obj_terms))
         term_overlap = matched_q / len(query_content_terms)
 
         hit_subj = str(h.get("subject", "")).lower()
         if mentioned_subjects and hit_subj not in mentioned_subjects:
             if not is_sensitive_query and dist <= 0.64 and term_overlap >= 0.50:
+                h["_strict"] = True
+                h["_overlap"] = float(term_overlap)
                 strict_vec_hits.append(h)
+                support_vec_hits.append(h)
+            elif not is_sensitive_query and (dist <= max_conv_dist or matched_q >= 1):
+                h["_strict"] = False
+                h["_cross_speaker"] = True
+                h["_overlap"] = float(term_overlap)
                 support_vec_hits.append(h)
             continue
 
@@ -323,23 +430,29 @@ def recall_context(
             passes_support = passes_strict
         elif mentioned_subjects and _is_second_person_attribution(str(h.get("object_val", ""))):
             passes_strict = False
-            passes_support = False
+            passes_support = bool(dist <= (1.02 if high_budget_mode else 0.90) or matched_q >= 1)
         elif mentioned_subjects:
-            passes_strict = (
-                dist <= 0.68
-                or (dist <= 0.76 and matched_q >= 1)
-                or (dist <= 0.88 and matched_q >= 2 and term_overlap >= 0.25)
-                or (dist <= 0.92 and term_overlap >= 0.50)
-            )
-            passes_support = passes_strict
+            if other_dominates_topic:
+                passes_strict = False
+            else:
+                is_inferential = bool(re.search(r"\b(?:would|likely|might)\b", q_low))
+                passes_strict = (
+                    (dist <= 0.74 and other_best_matched == 0)
+                    or (is_inferential and dist <= 0.78)
+                    or (dist <= 0.72 and (matched_q >= 1 or other_best_matched <= 1))
+                    or (dist <= 0.80 and matched_q >= 1)
+                    or (dist <= 0.89 and matched_q >= 2 and term_overlap >= 0.25)
+                    or (dist <= 0.94 and term_overlap >= 0.50)
+                )
+            passes_support = passes_strict or (dist <= max_conv_dist) or (matched_q >= 1)
         else:
             passes_strict = (
-                dist <= 0.72
-                or (dist <= 0.84 and matched_q >= 1)
+                dist <= 0.68
+                or (dist <= 0.82 and matched_q >= 1)
                 or (dist <= 0.90 and term_overlap >= 0.25)
                 or (dist <= 0.95 and term_overlap >= 0.34)
             )
-            passes_support = passes_strict
+            passes_support = passes_strict or (dist <= max_conv_dist) or (matched_q >= 1)
 
         h["_strict"] = bool(passes_strict)
         h["_overlap"] = float(term_overlap)
@@ -454,9 +567,10 @@ def recall_context(
         for r in rows:
             _add_row(dict(r))
 
-    else:
-        # HYBRID_TIERED: prioritize specific active predicates over stated/has_note fallback, newest first
-        if matching_active_predicates:
+    if route == "HYBRID_TIERED" or not matched_rows:
+        # HYBRID_TIERED (and fallback when structured route finds 0 non-note triples):
+        # prioritize specific active predicates over stated/has_note fallback, newest first
+        if matching_active_predicates and not matched_rows:
             placeholders = ",".join("?" for _ in matching_active_predicates)
             with store.sm.get_connection(namespace) as conn:
                 rows = conn.execute(
@@ -479,26 +593,34 @@ def recall_context(
                 key=lambda h: (
                     1 if h.get("predicate") in ("stated", "has_note") else 0,
                     0 if h.get("_strict", True) else 1,
+                    float(h.get("distance", 999.0))
+                    - min(0.12, 0.02 * int(h.get("_lex_hits", 0)) + 1.8 * float(h.get("_rrf_score", 0.0)))
+                    - 0.04 * float(h.get("_overlap", 0.0)),
                     float(h.get("distance", 999.0)),
                 ),
             )
             note_count = 0
+            deferred_hits: List[Dict[str, Any]] = []
             for h in sorted_vec_hits:
-                if h.get("predicate") in ("stated", "has_note"):
-                    if note_count >= 10:
-                        continue
+                if h.get("predicate") not in ("stated", "has_note"):
+                    _add_row(h)
+                elif note_count < 4:
+                    _add_row(h)
                     note_count += 1
-                _add_row(h)
+                else:
+                    deferred_hits.append(h)
 
-            if not is_sensitive_query and note_count < 10:
+            max_note_cap = dynamic_k
+            adj_note_cap = min(dynamic_k, 16 if high_budget_mode else 10)
+            if not is_sensitive_query and note_count < max_note_cap:
                 anchor_notes = [
                     r for r in matched_rows
                     if r.get("predicate") in ("stated", "has_note") and r.get("file_path")
-                ][:2]
+                ][: (4 if high_budget_mode else 2)]
                 if anchor_notes:
                     with store.sm.get_connection(namespace) as conn:
                         for anchor in anchor_notes:
-                            if note_count >= 10:
+                            if note_count >= adj_note_cap:
                                 break
                             rid_row = conn.execute(
                                 "SELECT rowid FROM claims_index WHERE claim_id = ?",
@@ -515,17 +637,24 @@ def recall_context(
                                      AND c.status = 'active'
                                      AND c.predicate IN ('has_note', 'stated')
                                      AND s.file_path = ?
-                                     AND c.rowid IN (?, ?)
-                                   ORDER BY c.rowid ASC""",
-                                (namespace, anchor["file_path"], rid - 1, rid + 1),
+                                     AND c.rowid IN (?, ?, ?, ?)
+                                   ORDER BY ABS(c.rowid - ?) ASC, c.rowid ASC""",
+                                (namespace, anchor["file_path"], rid - 1, rid + 1, rid - 2, rid + 2, rid),
                             ).fetchall()
                             for ar in adj_rows:
-                                if note_count >= 10:
+                                if note_count >= adj_note_cap:
                                     break
                                 ar_dict = dict(ar)
                                 if ar_dict["claim_id"] not in seen_claim_ids:
                                     _add_row(ar_dict)
                                     note_count += 1
+
+            for h in deferred_hits:
+                if note_count >= max_note_cap:
+                    break
+                if h["claim_id"] not in seen_claim_ids:
+                    _add_row(h)
+                    note_count += 1
 
     if not matched_rows:
         latency_ms = (time.perf_counter() - t0) * 1000.0
@@ -543,7 +672,7 @@ def recall_context(
     shard_dir = store.sm.get_shard_dir(namespace)
     abstract_file = shard_dir / ".abstract.md"
     l0_content = abstract_file.read_text(encoding="utf-8").strip() if abstract_file.exists() else ""
-    if l0_content and len(enc.encode(l0_content)) > 120:
+    if l0_content and len(enc.encode(l0_content)) > 60:
         filtered_l0 = [
             ln for ln in l0_content.splitlines()
             if not ln.lstrip().startswith("- has_note:")
@@ -554,7 +683,7 @@ def recall_context(
     if l0_content:
         header_sections.append(f"## OpenViking Tier L0 (Core Identity)\n{l0_content}")
 
-    soft_pack_budget = min(token_budget, 660) if token_budget >= 750 else token_budget
+    soft_pack_budget = token_budget
     l1_lines: List[str] = ["## Tier L1 Active Triples"]
     l2_lines: List[str] = ["## Tier L2 Exact Quotes & Provenance"]
     citations: List[str] = []
@@ -565,37 +694,45 @@ def recall_context(
     for c in matched_rows:
         status_val = c.get("status", "active")
         status_suffix = f" [status={status_val}]" if status_val != "active" else ""
+        is_note = c.get("predicate") in ("has_note", "stated")
         obj_disp = str(c["object_val"])
-        if c.get("predicate") in ("has_note", "stated"):
-            if len(obj_disp) > 80:
-                obj_disp = obj_disp[:77] + "..."
-            cand_l1 = f"- **{c['subject']}**: {obj_disp}{status_suffix} [^{c['source_id']}]"
-        else:
-            cand_l1 = (
-                f"- **{c['subject']}** -> **{c['predicate']}**: {obj_disp} "
-                f"(since {c['valid_from']}){status_suffix} [^{c['source_id']}]"
-            )
 
         span_text = store.read_verified_span(
             namespace, c["file_path"], c["byte_start"], c["byte_end"]
         )
         new_source = bool(span_text and "[REDACTED" not in span_text and c["source_id"] not in seen_sources)
         cand_l2 = (
-            f"[^{c['source_id']}]: \"{span_text}\" ({c['file_path']} bytes {c['byte_start']}-{c['byte_end']})"
+            f"[^{c['source_id']}]: \"{span_text}\""
             if new_source
             else None
         )
 
-        trial_l1 = "\n".join([*l1_lines, cand_l1])
+        # Structured triples appear in L1 + L2; raw conversational turns emit their verified L2 span directly
+        # to avoid duplicating every sentence twice and pack ~3x more evidence inside the same token budget.
+        if is_note:
+            if cand_l2 is not None:
+                cand_l1: Optional[str] = None
+            else:
+                if len(obj_disp) > 200:
+                    obj_disp = obj_disp[:197] + "..."
+                cand_l1 = f"- **{c['subject']}**: {obj_disp}{status_suffix} [^{c['source_id']}]"
+        else:
+            cand_l1 = (
+                f"- **{c['subject']}** -> **{c['predicate']}**: {obj_disp} "
+                f"(since {c['valid_from']}){status_suffix} [^{c['source_id']}]"
+            )
+
+        trial_l1 = "\n".join([*l1_lines, cand_l1]) if cand_l1 else ("\n".join(l1_lines) if len(l1_lines) > 1 else "")
         trial_l2 = "\n".join([*l2_lines, cand_l2]) if cand_l2 else ("\n".join(l2_lines) if len(l2_lines) > 1 else "")
-        trial_sections = [*header_sections, trial_l1] + ([trial_l2] if trial_l2 else [])
+        trial_sections = [*header_sections] + ([trial_l1] if trial_l1 else []) + ([trial_l2] if trial_l2 else [])
         trial_tokens = len(enc.encode("\n\n".join(trial_sections)))
         cap = token_budget if len(packed_rows) < 2 else soft_pack_budget
         if packed_rows and trial_tokens > cap:
             continue
 
         packed_rows.append(c)
-        l1_lines.append(cand_l1)
+        if cand_l1 is not None:
+            l1_lines.append(cand_l1)
         if span_text and "[REDACTED" not in span_text:
             cite_tag = f"[^{c['source_id']}]"
             if cite_tag not in citations:
@@ -613,7 +750,9 @@ def recall_context(
                     )
                 )
 
-    context_sections = [*header_sections, "\n".join(l1_lines)]
+    context_sections = [*header_sections]
+    if len(l1_lines) > 1:
+        context_sections.append("\n".join(l1_lines))
     if len(l2_lines) > 1:
         context_sections.append("\n".join(l2_lines))
 

@@ -1,15 +1,14 @@
 {
   "mcpServers": {
     "knowledge-brain": {
-      "command": "C:\\Users\\Chaithra\\Desktop\\TraceZero\\.venv\\Scripts\\python.exe",
+      "command": "knowledge-brain/.venv/bin/python",
       "args": [
-        "C:\\Users\\Chaithra\\Desktop\\TraceZero\\mcp_server.py",
+        "mcp_server.py",
         "--transport",
         "stdio"
       ],
       "env": {
-        "PYTHONPATH": "C:\\Users\\Chaithra\\Desktop\\TraceZero;C:\\Users\\Chaithra\\Desktop\\TraceZero\\knowledge-brain",
-        "MEMORY_ROOT": "C:\\Users\\Chaithra\\Desktop\\TraceZero\\memory_root"
+        "MEMORY_ROOT": "memory_root"
       }
     }
   }

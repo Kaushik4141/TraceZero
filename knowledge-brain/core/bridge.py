@@ -206,9 +206,9 @@ def _extract_claim_triples_with_spans(
                 triples.append((default_sub, "lives_in", val, clause))
                 continue
 
-        # 3. DB / tool preferences: "preferred DB is PostgreSQL" / "DB preference is MongoDB"
+        # 3. DB / tool preferences: "preferred DB is PostgreSQL" / "Target database is PostgreSQL 16"
         db_match = re.search(
-            r"(?:preferred\s+DB\s+is|preferred\s+database\s+is|database\s+of\s+choice\s+is|DB\s+preference\s+is|switch\s+(?:from\s+\w+\s+)?to)\s+([A-Za-z0-9_\-\s]+)",
+            r"(?:target\s+(?:DB|database)\s+is|preferred\s+DB\s+is|preferred\s+database\s+is|database\s+of\s+choice\s+is|DB\s+preference\s+is|switch\s+(?:from\s+\w+\s+)?to)\s+([A-Za-z0-9_\-\s]+)",
             clause,
             re.IGNORECASE,
         )
@@ -218,9 +218,9 @@ def _extract_claim_triples_with_spans(
                 triples.append((default_sub, "target_database", val, clause))
                 continue
 
-        # 4. Primary key specifications: "primary keys in payment tables must use uuidv7"
+        # 4. Primary key specifications: "primary keys in payment tables must use uuidv7" / "Primary key format is uuidv7"
         pk_match = re.search(
-            r"(?:primary\s+keys?.*?must\s+use|primary\s+keys?\s+(?:are|format|is))\s+([A-Za-z0-9_\-]+)",
+            r"(?:primary\s+keys?.*?must\s+use|primary\s+keys?(?:\s+format)?\s+(?:are|format|is))\s+([A-Za-z0-9_\-]+)",
             clause,
             re.IGNORECASE,
         )
@@ -330,7 +330,7 @@ def remember(
 
     if "quote" in src_cols:
         cursor.execute(
-            "INSERT INTO sources_index VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO sources_index (source_id, file_path, sha256_hash, origin, trust_tier, byte_start, byte_end, quote, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 source_id,
                 rel_source_path,

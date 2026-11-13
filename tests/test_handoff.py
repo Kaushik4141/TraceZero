@@ -224,3 +224,19 @@ def test_handoff_file_not_found(mock_memory_root: Path):
 
     with pytest.raises(FileNotFoundError):
         get_handoff(namespace=namespace, task_id="nonexistent_task", memory_root=mock_memory_root)
+
+
+def test_realtime_handoff_console(mock_memory_root: Path):
+    from agents.realtime_handoff import run_realtime_handoff
+
+    restored = run_realtime_handoff(
+        namespace="acme_corp/users/emp_042",
+        task_id="test_realtime_task",
+        mode="2",
+        wait_for_enter=False,
+        memory_root=mock_memory_root,
+    )
+    assert restored["task_id"] == "test_realtime_task"
+    assert restored["status"] == "in_progress"
+    assert len(restored["active_decisions"]) >= 2
+    assert (mock_memory_root / "acme_corp" / "users" / "emp_042" / "tasks.okf.md").exists()

@@ -116,3 +116,31 @@ def test_get_benchmarks():
     assert len(data["strategies"]) == 5
     assert "session_token_comparison" in data
     assert data["session_token_comparison"]["reduction_percentage"] > 90.0
+
+
+def test_dashboard_interactive_handoff(tmp_path, monkeypatch):
+    """Verify /api/handoff/create and /api/handoff/{namespace} create and restore tasks.okf.md."""
+    monkeypatch.setenv("MEMORY_ROOT", str(tmp_path))
+    create_res = client.post(
+        "/api/handoff/create",
+        json={
+            "namespace": NAMESPACE,
+            "task_id": "dash_handoff_01",
+            "goal": "Cut over payment service to PostgreSQL 16.",
+            "decisions": ["Target database is PostgreSQL 16."],
+            "completed_steps": ["Step 1: Provisioned RDS instance"],
+            "pending_steps": ["Step 2: Run dual-write worker"],
+        },
+    )
+    assert create_res.status_code == 200
+    created = create_res.json()
+    assert created["exists"] is True
+    assert created["task_id"] == "dash_handoff_01"
+    assert len(created["recorded_claims"]) >= 1
+
+    get_res = client.get(f"/api/handoff/{NAMESPACE}?task_id=dash_handoff_01")
+    assert get_res.status_code == 200
+    restored = get_res.json()
+    assert restored["exists"] is True
+    assert restored["goal"] == "Cut over payment service to PostgreSQL 16."
+    assert len(restored["active_decisions"]) >= 1

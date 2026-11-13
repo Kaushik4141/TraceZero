@@ -213,15 +213,23 @@ def summarize_engine_records(
     ans_records = [r for r in records if r["category"] in (1, 2, 3, 4)]
     latencies = [r["latency_ms"] for r in records]
     tok_counts = [r["context_tokens"] for r in records]
+    overall_recall = round(
+        100.0 * statistics.mean(r["token_recall"] for r in ans_records), 2
+    ) if ans_records else 0.0
+    mean_toks = round(statistics.mean(tok_counts), 1) if tok_counts else 0.0
+    all_cat_scores = [
+        (1.0 if r["abstained"] else 0.0) if r["category"] == 5 else r["token_recall"]
+        for r in records
+    ]
+    all_cat_pct = round(100.0 * statistics.mean(all_cat_scores), 2) if all_cat_scores else 0.0
+    recall_per_1k = round(overall_recall / (mean_toks / 1000.0), 1) if mean_toks > 0 else 0.0
 
     return {
         "engine": name,
         "total_qas": len(records),
         "ingest_secs": round(ingest_secs, 2),
         "ingest_items": ingest_items,
-        "overall_token_recall_pct": round(
-            100.0 * statistics.mean(r["token_recall"] for r in ans_records), 2
-        ) if ans_records else 0.0,
+        "overall_token_recall_pct": overall_recall,
         "overall_best_line_f1_pct": round(
             100.0 * statistics.mean(r["best_line_f1"] for r in ans_records), 2
         ) if ans_records else 0.0,
@@ -229,7 +237,9 @@ def summarize_engine_records(
             100.0 * statistics.mean(r["substring_hit"] for r in ans_records), 2
         ) if ans_records else 0.0,
         "cat5_abstention_pct": cat_stats.get(5, {}).get("abstention_rate_pct", 0.0),
-        "mean_context_tokens": round(statistics.mean(tok_counts), 1) if tok_counts else 0.0,
+        "all_category_score_pct": all_cat_pct,
+        "mean_context_tokens": mean_toks,
+        "recall_per_1k_tokens": recall_per_1k,
         "p50_latency_ms": round(statistics.median(latencies), 2) if latencies else 0.0,
         "p95_latency_ms": round(
             sorted(latencies)[max(0, int(0.95 * len(latencies)) - 1)], 2
@@ -280,7 +290,10 @@ def eval_qa_item(
 # 1. TraceZero Engine
 # ---------------------------------------------------------------------------
 def run_tracezero_on_locomo(
-    conv: Dict[str, Any], qa_list: List[Dict[str, Any]], token_budget: int = 500
+    conv: Dict[str, Any],
+    qa_list: List[Dict[str, Any]],
+    token_budget: int = 800,
+    engine_label: str = "TraceZero",
 ) -> Dict[str, Any]:
     """Run real TraceZero MemoryStore + ingest_message + recall_context + forget."""
     tmp_dir = Path(tempfile.mkdtemp(prefix="tz_locomo_"))
@@ -349,7 +362,7 @@ def run_tracezero_on_locomo(
             "byte_clean_pct": 100.0 if post_matches == 0 else 0.0,
         }
         return summarize_engine_records(
-            name="TraceZero",
+            name=engine_label,
             records=records,
             ingest_secs=ingest_secs,
             ingest_items=turns_ingested,
@@ -702,15 +715,16 @@ def render_markdown_report(
         "",
         "## Overall Comparison",
         "",
-        "| Engine | Cat 1-4 Token Recall (%) | Cat 1-4 Best-Line F1 (%) | Cat 5 Abstention (%) | Mean Context Tokens | p50 Latency (ms) | Post-Delete Residual Bytes | Byte-Clean (%) |",
-        "|---|---:|---:|---:|---:|---:|---:|---:|",
+        "| Engine | Cat 1-4 Token Recall (%) | Cat 1-4 Best-Line F1 (%) | Cat 5 Abstention (%) | All-Cat Score (1-5 %) | Mean Context Tokens | Recall / 1K Tok | p50 Latency (ms) | Post-Delete Residual Bytes | Byte-Clean (%) |",
+        "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for r in results:
         da = r["deletion_audit"]
         lines.append(
             f"| {r['engine']} | {r['overall_token_recall_pct']:.2f}% | "
             f"{r['overall_best_line_f1_pct']:.2f}% | {r['cat5_abstention_pct']:.2f}% | "
-            f"{r['mean_context_tokens']:.1f} | {r['p50_latency_ms']:.2f} | "
+            f"{r.get('all_category_score_pct', 0.0):.2f}% | {r['mean_context_tokens']:.1f} | "
+            f"{r.get('recall_per_1k_tokens', 0.0):.1f} | {r['p50_latency_ms']:.2f} | "
             f"{da['post_delete_byte_matches']} | {da['byte_clean_pct']:.1f}% |"
         )
 
@@ -743,52 +757,167 @@ def render_markdown_report(
     return "\n".join(lines)
 
 
+def _aggregate_engine_summaries(summaries: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Weighted aggregation of per-conversation benchmark summaries."""
+    if len(summaries) == 1:
+        return summaries[0]
+    total_qas = sum(s["total_qas"] for s in summaries)
+    cat_agg: Dict[str, Dict[str, Any]] = {}
+    for cat_key in ("1", "2", "3", "4", "5"):
+        parts = [s["categories"][cat_key] for s in summaries if cat_key in s["categories"] and s["categories"][cat_key]["count"] > 0]
+        if not parts:
+            continue
+        c_total = sum(p["count"] for p in parts)
+        if cat_key == "5":
+            abs_cnt = sum(p["abstention_rate_pct"] * p["count"] for p in parts) / c_total
+            leak_cnt = sum(p["adversarial_leak_pct"] * p["count"] for p in parts) / c_total
+            cat_agg[cat_key] = {
+                "name": "Adversarial",
+                "count": c_total,
+                "abstention_rate_pct": round(abs_cnt, 2),
+                "adversarial_leak_pct": round(leak_cnt, 2),
+            }
+        else:
+            cat_agg[cat_key] = {
+                "name": parts[0]["name"],
+                "count": c_total,
+                "token_recall_pct": round(sum(p["token_recall_pct"] * p["count"] for p in parts) / c_total, 2),
+                "best_line_f1_pct": round(sum(p["best_line_f1_pct"] * p["count"] for p in parts) / c_total, 2),
+                "substring_hit_pct": round(sum(p["substring_hit_pct"] * p["count"] for p in parts) / c_total, 2),
+            }
+    ans_count = sum(cat_agg[k]["count"] for k in ("1", "2", "3", "4") if k in cat_agg)
+    overall_recall = round(
+        sum(cat_agg[k]["token_recall_pct"] * cat_agg[k]["count"] for k in ("1", "2", "3", "4") if k in cat_agg) / ans_count, 2
+    ) if ans_count else 0.0
+    overall_f1 = round(
+        sum(cat_agg[k]["best_line_f1_pct"] * cat_agg[k]["count"] for k in ("1", "2", "3", "4") if k in cat_agg) / ans_count, 2
+    ) if ans_count else 0.0
+    overall_sub = round(
+        sum(cat_agg[k]["substring_hit_pct"] * cat_agg[k]["count"] for k in ("1", "2", "3", "4") if k in cat_agg) / ans_count, 2
+    ) if ans_count else 0.0
+    cat5_abs = cat_agg.get("5", {}).get("abstention_rate_pct", 0.0)
+    mean_toks = round(sum(s["mean_context_tokens"] * s["total_qas"] for s in summaries) / total_qas, 1) if total_qas else 0.0
+    all_cat = round(sum(s.get("all_category_score_pct", 0.0) * s["total_qas"] for s in summaries) / total_qas, 2) if total_qas else 0.0
+    recall_1k = round(overall_recall / (mean_toks / 1000.0), 1) if mean_toks > 0 else 0.0
+    pre_del = sum(s["deletion_audit"]["pre_delete_byte_matches"] for s in summaries)
+    post_del = sum(s["deletion_audit"]["post_delete_byte_matches"] for s in summaries)
+    all_abstained = all(s["deletion_audit"]["post_delete_abstained"] for s in summaries)
+    return {
+        "engine": summaries[0]["engine"],
+        "total_qas": total_qas,
+        "ingest_secs": round(sum(s["ingest_secs"] for s in summaries), 2),
+        "ingest_items": sum(s["ingest_items"] for s in summaries),
+        "overall_token_recall_pct": overall_recall,
+        "overall_best_line_f1_pct": overall_f1,
+        "overall_substring_hit_pct": overall_sub,
+        "cat5_abstention_pct": cat5_abs,
+        "all_category_score_pct": all_cat,
+        "mean_context_tokens": mean_toks,
+        "recall_per_1k_tokens": recall_1k,
+        "p50_latency_ms": round(statistics.median(s["p50_latency_ms"] for s in summaries), 2),
+        "p95_latency_ms": round(max(s["p95_latency_ms"] for s in summaries), 2),
+        "categories": cat_agg,
+        "deletion_audit": {
+            "pre_delete_byte_matches": pre_del,
+            "post_delete_byte_matches": post_del,
+            "post_delete_abstained": all_abstained,
+            "byte_clean_pct": 100.0 if post_del == 0 else 0.0,
+        },
+    }
+
+
+BUDGET_CONFIGS: List[tuple[str, int]] = [
+    ("TraceZero (Strict PS-06 Budget=800)", 800),
+    ("TraceZero (Mid Budget=2000, ~OpenViking)", 2000),
+    ("TraceZero (High Budget=7000, ~Mem0 Research)", 7000),
+]
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Run live LoCoMo benchmark across TraceZero, OpenViking, and Mem0.")
     parser.add_argument("--conv-index", type=int, default=0, help="LoCoMo conversation index (0-9).")
-    parser.add_argument("--max-qas", type=int, default=0, help="Optional cap on QA count (0 = all).")
-    parser.add_argument("--token-budget", type=int, default=800, help="TraceZero recall token budget.")
+    parser.add_argument("--conv-indices", type=str, default="", help="Comma-separated conversation indices (e.g. 0,1,2).")
+    parser.add_argument("--all-convs", action="store_true", help="Evaluate across all conversations in locomo10.json.")
+    parser.add_argument("--max-qas", type=int, default=0, help="Optional cap on QA count per conversation (0 = all).")
+    parser.add_argument("--token-budget", type=int, default=800, help="TraceZero recall token budget (when --single-budget is set).")
+    parser.add_argument("--single-budget", action="store_true", help="Run only --token-budget instead of the 3-budget sweep.")
     parser.add_argument("--top-k", type=int, default=5, help="Top-k retrieval limit for Mem0 and OpenViking.")
     args = parser.parse_args()
 
     dataset = load_locomo_dataset()
-    sample = dataset[args.conv_index]
-    conv = sample["conversation"]
-    qa_list = sample["qa"] if args.max_qas <= 0 else sample["qa"][: args.max_qas]
-    sessions = extract_sessions(conv)
+    if args.all_convs:
+        indices = list(range(len(dataset)))
+    elif args.conv_indices.strip():
+        indices = [int(x.strip()) for x in args.conv_indices.split(",") if x.strip()]
+    else:
+        indices = [args.conv_index]
 
-    print(
-        f"[LoCoMo] Sample={sample.get('sample_id', args.conv_index)} | "
-        f"sessions={len(sessions)} | qas={len(qa_list)}",
-        flush=True,
+    budget_configs = (
+        [(f"TraceZero (Budget={args.token_budget})", args.token_budget)]
+        if args.single_budget
+        else BUDGET_CONFIGS
     )
+    tz_runs_by_label: Dict[str, List[Dict[str, Any]]] = {label: [] for label, _ in budget_configs}
+    ov_runs, m0_runs = [], []
+    total_sessions = 0
+    total_qas = 0
+    sample_labels: List[str] = []
 
-    print("[1/3] Running TraceZero...", flush=True)
-    tz_res = run_tracezero_on_locomo(conv, qa_list, token_budget=args.token_budget)
-    print(f"  -> TraceZero done in {tz_res['ingest_secs']}s ingest | recall={tz_res['overall_token_recall_pct']}% | post-delete bytes={tz_res['deletion_audit']['post_delete_byte_matches']}", flush=True)
+    for ci in indices:
+        sample = dataset[ci]
+        conv = sample["conversation"]
+        qa_list = sample["qa"] if args.max_qas <= 0 else sample["qa"][: args.max_qas]
+        sessions = extract_sessions(conv)
+        total_sessions += len(sessions)
+        total_qas += len(qa_list)
+        s_label = str(sample.get("sample_id", ci))
+        sample_labels.append(s_label)
 
-    print("[2/3] Running OpenViking (openviking)...", flush=True)
-    ov_res = run_openviking_on_locomo(conv, qa_list, top_k=args.top_k)
-    print(f"  -> OpenViking done in {ov_res['ingest_secs']}s ingest | recall={ov_res['overall_token_recall_pct']}% | post-delete bytes={ov_res['deletion_audit']['post_delete_byte_matches']}", flush=True)
+        print(
+            f"[LoCoMo] Sample={s_label} | sessions={len(sessions)} | qas={len(qa_list)}",
+            flush=True,
+        )
 
-    print("[3/3] Running Mem0 (mem0ai)...", flush=True)
-    m0_res = run_mem0_on_locomo(conv, qa_list, top_k=args.top_k)
-    print(f"  -> Mem0 done in {m0_res['ingest_secs']}s ingest | recall={m0_res['overall_token_recall_pct']}% | post-delete bytes={m0_res['deletion_audit']['post_delete_byte_matches']}", flush=True)
+        print("[1/3] Running TraceZero multi-budget sweep...", flush=True)
+        for label, budget in budget_configs:
+            tz_r = run_tracezero_on_locomo(conv, qa_list, token_budget=budget, engine_label=label)
+            print(
+                f"  -> {label}: ingest={tz_r['ingest_secs']}s | cat1-4={tz_r['overall_token_recall_pct']}% "
+                f"| cat5={tz_r['cat5_abstention_pct']}% | avg_tok={tz_r['mean_context_tokens']} "
+                f"| post-delete bytes={tz_r['deletion_audit']['post_delete_byte_matches']}",
+                flush=True,
+            )
+            tz_runs_by_label[label].append(tz_r)
 
-    results = [tz_res, ov_res, m0_res]
+        print("[2/3] Running OpenViking (openviking)...", flush=True)
+        ov_r = run_openviking_on_locomo(conv, qa_list, top_k=args.top_k)
+        print(f"  -> OpenViking done in {ov_r['ingest_secs']}s ingest | recall={ov_r['overall_token_recall_pct']}% | post-delete bytes={ov_r['deletion_audit']['post_delete_byte_matches']}", flush=True)
+        ov_runs.append(ov_r)
+
+        print("[3/3] Running Mem0 (mem0ai)...", flush=True)
+        m0_r = run_mem0_on_locomo(conv, qa_list, top_k=args.top_k)
+        print(f"  -> Mem0 done in {m0_r['ingest_secs']}s ingest | recall={m0_r['overall_token_recall_pct']}% | post-delete bytes={m0_r['deletion_audit']['post_delete_byte_matches']}", flush=True)
+        m0_runs.append(m0_r)
+
+    results = [
+        *(_aggregate_engine_summaries(tz_runs_by_label[label]) for label, _ in budget_configs),
+        _aggregate_engine_summaries(ov_runs),
+        _aggregate_engine_summaries(m0_runs),
+    ]
+    sample_id_str = ", ".join(sample_labels)
     payload = {
-        "sample_id": sample.get("sample_id", str(args.conv_index)),
-        "num_sessions": len(sessions),
-        "num_qas": len(qa_list),
+        "sample_id": sample_id_str,
+        "num_sessions": total_sessions,
+        "num_qas": total_qas,
         "results": results,
     }
 
     RESULTS_JSON_PATH.parent.mkdir(parents=True, exist_ok=True)
     RESULTS_JSON_PATH.write_text(json.dumps(payload, indent=2), encoding="utf-8")
     md_text = render_markdown_report(
-        sample_id=payload["sample_id"],
-        num_sessions=len(sessions),
-        num_qas=len(qa_list),
+        sample_id=sample_id_str,
+        num_sessions=total_sessions,
+        num_qas=total_qas,
         results=results,
     )
     RESULTS_MD_PATH.write_text(md_text, encoding="utf-8")

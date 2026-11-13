@@ -78,6 +78,17 @@ class ByteScanRequest(BaseModel):
     query: str
 
 
+class HandoffCreateRequest(BaseModel):
+    namespace: str
+    task_id: str = "realtime_demo_task"
+    goal: str
+    decisions: List[str] = []
+    completed_steps: List[str] = []
+    pending_steps: List[str] = []
+    open_questions: List[str] = []
+    created_by_agent: str = "agent1_architect"
+
+
 @app.get("/api/namespaces")
 def list_namespaces():
     """List all available micro-shard namespaces with tenant isolation status."""
@@ -424,6 +435,44 @@ def get_benchmarks():
             "reduction_percentage": 98.48,
         },
     }
+
+
+@app.get("/api/handoff/{namespace:path}")
+def get_handoff_state(namespace: str, task_id: str = "realtime_demo_task"):
+    """Inspect the active OKF v0.2 cross-agent handoff packet for a namespace."""
+    root = _resolve_memory_root()
+    okf_path = root / namespace / "tasks.okf.md"
+    if not okf_path.exists():
+        return {"exists": False, "namespace": namespace, "task_id": task_id}
+
+    restored = bridge.handoff_get(namespace=namespace, task_id=task_id)
+    restored["exists"] = True
+    return restored
+
+
+@app.post("/api/handoff/create")
+def create_handoff_state(req: HandoffCreateRequest):
+    """Ingest Agent 1 decisions, write tasks.okf.md checkpoint, and return cold-start packet."""
+    recorded_claims = []
+    for dec in req.decisions:
+        text = dec.strip()
+        if text:
+            res = bridge.remember(namespace=req.namespace, text=text, origin="agent_interaction")
+            recorded_claims.extend(res.get("claims", []))
+
+    bridge.handoff_create(
+        namespace=req.namespace,
+        task_id=req.task_id,
+        goal=req.goal,
+        completed_steps=[s for s in req.completed_steps if s.strip()],
+        pending_steps=[s for s in req.pending_steps if s.strip()],
+        open_questions=[q for q in req.open_questions if q.strip()],
+        created_by_agent=req.created_by_agent,
+    )
+    restored = bridge.handoff_get(namespace=req.namespace, task_id=req.task_id)
+    restored["exists"] = True
+    restored["recorded_claims"] = recorded_claims
+    return restored
 
 
 # Mount static assets and serve single-page app

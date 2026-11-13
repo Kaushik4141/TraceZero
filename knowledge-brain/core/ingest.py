@@ -55,6 +55,66 @@ def split_into_atomic_clauses(text: str) -> List[str]:
     return clauses
 
 
+KV_PREDICATE_ALIASES = {
+    "preferred_database": "preferred_db",
+    "primary_database": "preferred_db",
+    "primary_db": "preferred_db",
+    "service_database": "preferred_db",
+    "database": "preferred_db",
+    "db": "preferred_db",
+    "db_engine": "preferred_db",
+    "region": "aws_region",
+    "cloud_region": "aws_region",
+    "environment": "deployment_env",
+    "env": "deployment_env",
+    "service": "service_name",
+    "project": "project_name",
+}
+
+_JSON_KV_RE = re.compile(
+    r'"([a-zA-Z_][a-zA-Z0-9_]{0,40})"\s*:\s*(?:"([^"\n]+)"|(true|false|-?\d+(?:\.\d+)?))'
+)
+_YAML_KV_RE = re.compile(
+    r'^[ \t]*(?:-\s+)?([a-z][a-z0-9_]{1,40})\s*:\s*(?:"([^"\n]+)"|\'([^\'\n]+)\'|([^\s{}\[\],#"\'][^\n{}\[\],#]*?))[ \t]*$',
+    re.MULTILINE,
+)
+_KV_SKIP_KEYS = {"http", "https", "constraint", "completed", "pending", "task_goal", "task_completed", "task_pending", "goal"}
+
+
+def _extract_kv_candidates(
+    raw_text: str,
+    proj_subject: str,
+) -> List[ExtractedCandidate]:
+    """Extract structured JSON / YAML scalar key-value pairs with verbatim exact quotes."""
+    results: List[ExtractedCandidate] = []
+    seen_spans: set[tuple[int, int]] = set()
+
+    for pattern, is_yaml in ((_JSON_KV_RE, False), (_YAML_KV_RE, True)):
+        for m in pattern.finditer(raw_text):
+            raw_key = m.group(1).strip().lower()
+            if raw_key in _KV_SKIP_KEYS:
+                continue
+            val = next((g for g in m.groups()[1:] if g is not None), "").strip()
+            if not val or val.startswith("//"):
+                continue
+            if is_yaml and '"' in m.group(0):
+                continue
+            span = (m.start(), m.end())
+            if span in seen_spans:
+                continue
+            seen_spans.add(span)
+            predicate = KV_PREDICATE_ALIASES.get(raw_key, raw_key)
+            results.append(
+                ExtractedCandidate(
+                    subject=proj_subject,
+                    predicate=predicate,
+                    object_val=val,
+                    exact_quote=m.group(0).strip(),
+                )
+            )
+    return results
+
+
 def extract_heuristic_candidates(
     raw_text: str, default_subject: str = "user"
 ) -> List[ExtractedCandidate]:
@@ -65,21 +125,36 @@ def extract_heuristic_candidates(
         if spk_m:
             default_subject = spk_m.group(1).strip().lower()
 
+    emp_m = re.search(r"(?i)\bEmployee\s+`?(emp_\d+)`?\b", raw_text)
+    if default_subject == "user" and emp_m:
+        default_subject = emp_m.group(1).strip().lower()
+
     # Detect project subject if an enterprise project is named in raw_text
     proj_m = re.search(
-        r"(?i)\b(orion_payments|atlas_auth|hyperion_search|kronos_billing|nebula_analytics|"
+        r"(?i)\b(orion[\s_]+payments|atlas_auth|hyperion_search|kronos_billing|nebula_analytics|"
         r"vortex_streaming|aegis_gateway|titan_ledger|zephyr_messaging|pulsar_telemetry|"
         r"helios_compute|argus_security|nexus_graph|stratos_cdn|valkyrie_ci|cobalt_cache|"
         r"solaris_ml|mercury_fx|borealis_storage|draco_compliance|project_atlas|Project Atlas)\b",
         raw_text,
     )
+    svc_m = None
+    if not proj_m:
+        svc_m = re.search(
+            r'(?i)(?:"(?:service|project|app|application)"\s*:\s*"([a-zA-Z0-9_\-\s]+)"|^[ \t]*(?:service|project|app|application)\s*:\s*([a-zA-Z0-9_\-]+))',
+            raw_text,
+            flags=re.MULTILINE,
+        )
+
+    has_explicit_project = bool(proj_m or svc_m)
     if proj_m:
-        matched_proj = proj_m.group(1).strip()
-        proj_subject = "project_atlas" if matched_proj.lower() == "project atlas" else matched_proj.lower()
+        proj_subject = re.sub(r"\s+", "_", proj_m.group(1).strip().lower())
+    elif svc_m:
+        svc_val = (svc_m.group(1) or svc_m.group(2) or "").strip()
+        proj_subject = re.sub(r"\s+", "_", svc_val.lower()) or "project_atlas"
     else:
         proj_subject = "orion_payments" if default_subject == "emp_042" else "project_atlas"
 
-    candidates: List[ExtractedCandidate] = []
+    candidates: List[ExtractedCandidate] = _extract_kv_candidates(raw_text, proj_subject)
     clauses = split_into_atomic_clauses(raw_text) or ([raw_text.strip()] if raw_text.strip() else [])
 
     for clause in clauses:
@@ -127,10 +202,10 @@ def extract_heuristic_candidates(
                     )
                 )
         for m in re.finditer(
-            r"(?i)(?:my\s+)?assigned[\s_]+team\s+(?:is|was)\s+([a-zA-Z0-9_\-]+?)(?:\s+(?:and|but|because|with|since|which|my)|[,.\n]|$)",
+            r"(?i)(?:(?:my\s+)?assigned[\s_]+team\s+(?:is|was)\s+`?([a-zA-Z0-9_\-]+)`?(?:\s+(?:and|but|because|with|since|which|my)|[,.\n]|$)|assigned\s+to\s+(?:the\s+)?`?([a-zA-Z0-9_\-]+)`?\s+team\b)",
             clause,
         ):
-            val = clean_object_val(m.group(1))
+            val = clean_object_val(m.group(1) or m.group(2) or "")
             if val:
                 candidates.append(
                     ExtractedCandidate(
@@ -189,15 +264,15 @@ def extract_heuristic_candidates(
                     )
                 )
         for m in re.finditer(
-            r"(?i)(?:use|uses|using)\s+([a-zA-Z0-9_\-]+)\s+(?:as\s+our\s+|for\s+)?database",
+            r"(?i)(?:use|uses|using)\s+([a-zA-Z0-9_\-]+)\s+(?:as\s+(?:our|its)\s+(?:primary\s+|service\s+)?)?(?:for\s+)?database",
             clause,
         ):
             val = clean_object_val(m.group(1))
             if val:
                 candidates.append(
                     ExtractedCandidate(
-                        subject="system",
-                        predicate="uses_database",
+                        subject=proj_subject if has_explicit_project else "system",
+                        predicate="preferred_db" if has_explicit_project else "uses_database",
                         object_val=val,
                         exact_quote=m.group(0).strip("., \n"),
                     )
@@ -205,10 +280,10 @@ def extract_heuristic_candidates(
 
         # 3b. Cloud Infrastructure: AWS/cloud region, deployment_env, project link, vault passphrase
         for m in re.finditer(
-            r"(?i)(?:(?:aws|cloud)[\s_]+region[^.\n]*?\b(us-[a-z]+-\d|eu-[a-z]+-\d|ap-[a-z]+-\d)\b|\b(us-[a-z]+-\d|eu-[a-z]+-\d|ap-[a-z]+-\d)\b[^.\n]*?(?:aws|cloud)[\s_]+region)",
+            r"(?i)(?:(?:aws|cloud)[\s_]+region[^.\n]*?\b(us-[a-z]+-\d|eu-[a-z]+-\d|ap-[a-z]+-\d)\b|\b(us-[a-z]+-\d|eu-[a-z]+-\d|ap-[a-z]+-\d)\b[^.\n]*?(?:aws|cloud)[\s_]+region|(?:runs?|hosted|deployed|located)\s+in\s+`?(us-[a-z]+-\d|eu-[a-z]+-\d|ap-[a-z]+-\d)`?)",
             clause,
         ):
-            val = (m.group(1) or m.group(2)).strip()
+            val = (m.group(1) or m.group(2) or m.group(3)).strip()
             candidates.append(
                 ExtractedCandidate(
                     subject=proj_subject,
@@ -259,6 +334,20 @@ def extract_heuristic_candidates(
                         predicate="role",
                         object_val=val,
                         exact_quote=quote,
+                    )
+                )
+        for m in re.finditer(
+            r"\bemp_\d+`?\s+(?:is|works\s+as)\s+(?:a|an)\s+([A-Z][a-zA-Z0-9_\-\s]{2,40}?)(?=\s+(?:based\s+in|located\s+in|and\s+|at\s+|for\s+|who\b)|[.,;!\n]|$)",
+            clause,
+        ):
+            val = clean_object_val(m.group(1))
+            if val:
+                candidates.append(
+                    ExtractedCandidate(
+                        subject=default_subject,
+                        predicate="role",
+                        object_val=val,
+                        exact_quote=m.group(0).strip("., \n"),
                     )
                 )
         for m in re.finditer(
@@ -405,17 +494,32 @@ def extract_heuristic_candidates(
                 )
             )
 
-    if proj_m and default_subject != "user" and any(
+    if has_explicit_project and default_subject != "user" and any(
         c.predicate in ("aws_region", "preferred_db", "deployment_env") for c in candidates
     ):
+        link_quote = proj_m.group(1) if proj_m else svc_m.group(0)
         candidates.append(
             ExtractedCandidate(
                 subject=default_subject,
                 predicate="works_on",
                 object_val=proj_subject,
-                exact_quote=proj_m.group(1),
+                exact_quote=link_quote,
             )
         )
+
+    # Deduplicate overlapping candidates (e.g., JSON KV + regex) preserving order
+    deduped: List[ExtractedCandidate] = []
+    seen_triples: set[tuple[str, str, str]] = set()
+    for cand in candidates:
+        key = (
+            cand.subject.strip().lower(),
+            cand.predicate.strip().lower(),
+            cand.object_val.strip().lower(),
+        )
+        if key not in seen_triples:
+            seen_triples.add(key)
+            deduped.append(cand)
+    candidates = deduped
 
     # 10. Fallback contextual note if nothing else matched
     if not candidates and raw_text.strip():

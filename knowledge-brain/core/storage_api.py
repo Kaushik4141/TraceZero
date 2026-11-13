@@ -94,7 +94,12 @@ class MemoryStore:
             return False
 
         if claim.predicate in ("has_note", "stated"):
-            semantic_text = f"{claim.subject}: {claim.object_val}"
+            clean_val = re.sub(
+                r"^(?:\[[^\]]+\]\s*)?[A-Za-z0-9_-]{1,30}:\s*",
+                "",
+                claim.object_val,
+            ).strip()
+            semantic_text = f"{claim.subject}: {clean_val or claim.object_val}"
         else:
             semantic_text = f"{claim.subject} {claim.predicate} {claim.object_val}"
         vec = embed_text(semantic_text)
@@ -111,6 +116,7 @@ class MemoryStore:
         q_vec_bytes = serialize_f32(q_vec)
         allowed_statuses = ("active", "disputed", "superseded") if include_superseded else ("active", "disputed")
         placeholders = ",".join("?" for _ in allowed_statuses)
+        vec_k = max(top_k * 2, 64)
 
         with self.sm.get_connection(namespace) as conn:
             vec_sql = f"""
@@ -123,49 +129,111 @@ class MemoryStore:
                   AND c.status IN ({placeholders})
                 ORDER BY v.distance ASC
             """
-            rows = [dict(r) for r in conn.execute(vec_sql, (q_vec_bytes, top_k, *allowed_statuses)).fetchall()]
-            seen_ids = {r["claim_id"] for r in rows}
+            rows = [dict(r) for r in conn.execute(vec_sql, (q_vec_bytes, vec_k, *allowed_statuses)).fetchall()]
+            rows_by_id: Dict[str, Dict[str, Any]] = {}
+            vec_rank_by_id: Dict[str, int] = {}
+            for idx, r in enumerate(rows):
+                cid = r["claim_id"]
+                rows_by_id[cid] = r
+                vec_rank_by_id[cid] = idx
 
-            # Complement vector KNN with FTS5 keyword matches scored by exact L2 distance
+            subj_rows = conn.execute(
+                "SELECT DISTINCT LOWER(subject) AS subj FROM claims_index WHERE status IN ({})".format(placeholders),
+                allowed_statuses,
+            ).fetchall()
+            shard_subjects = {r["subj"] for r in subj_rows if r["subj"] and r["subj"] != "user"}
+
+            # Complement vector KNN with FTS5 BM25 rare-keyword matches + RRF fusion
             _fts_stop = {
-                "what", "when", "where", "who", "whom", "whose", "why", "how",
-                "did", "does", "are", "was", "were", "the", "and", "for", "with",
-                "from", "into", "this", "that", "have", "has", "had", "not", "near",
+                "what", "when", "where", "who", "whom", "whose", "why", "how", "which",
+                "did", "does", "do", "are", "is", "was", "were", "be", "been", "being",
+                "the", "and", "for", "with", "from", "into", "onto", "this", "that",
+                "have", "has", "had", "not", "near", "would", "could", "should", "will",
+                "can", "may", "might", "about", "there", "their", "them", "they", "she",
+                "her", "hers", "him", "his", "you", "your", "our", "ours", "still",
+                "just", "also", "even", "very", "really", "actually", "recently",
+                "get", "got", "going", "went", "make", "made", "take", "took", "give",
+                "gave", "come", "came", "see", "saw", "say", "said", "tell", "told",
+                "know", "knew", "think", "thought", "want", "wanted", "need", "needed",
+                "use", "used", "like", "likely", "thing", "things", "way", "lot", "lots",
+                "much", "many", "more", "most", "some", "any", "time", "ago", "year",
+                "years", "month", "months", "week", "weeks", "day", "days", "long",
+                "during", "before", "after", "since", "between", "both", "each", "other",
             }
             terms = [
                 t for t in re.findall(r"[a-z0-9]+", query.lower())
                 if len(t) >= 3 and t not in _fts_stop
             ]
-            if terms:
-                fts_tokens = [f'"{t[:6]}"*' if len(t) >= 6 else f'"{t}"*' for t in dict.fromkeys(terms[:12])]
-                fts_query = " OR ".join(fts_tokens)
-                fts_sql = f"""
-                    SELECT c.*, s.file_path, s.origin, s.trust_tier,
-                           vec_distance_L2(v.embedding, ?) AS distance
-                    FROM fts_claims f
-                    JOIN lineage_index l ON l.fts_rowid = f.rowid
-                    JOIN claims_index c ON c.claim_id = l.claim_id
-                    JOIN sources_index s ON s.source_id = c.source_id
-                    JOIN vec_claims v ON v.rowid = l.vec_rowid
-                    WHERE fts_claims MATCH ?
-                      AND c.status IN ({placeholders})
-                    ORDER BY distance ASC
-                    LIMIT ?
-                """
+            rare_terms = [t for t in terms if t not in shard_subjects] or terms
+            fts_rank_by_id: Dict[str, int] = {}
+            fts_limit = max(top_k * 2, 48)
+            fts_base_sql = f"""
+                SELECT c.*, s.file_path, s.origin, s.trust_tier,
+                       vec_distance_L2(v.embedding, ?) AS distance,
+                       bm25(fts_claims) AS bm25_score
+                FROM fts_claims
+                JOIN lineage_index l ON l.fts_rowid = fts_claims.rowid
+                JOIN claims_index c ON c.claim_id = l.claim_id
+                JOIN sources_index s ON s.source_id = c.source_id
+                JOIN vec_claims v ON v.rowid = l.vec_rowid
+                WHERE fts_claims MATCH ?
+                  AND c.status IN ({placeholders})
+                ORDER BY bm25_score ASC, distance ASC
+                LIMIT ?
+            """
+
+            def _run_fts(fts_q: str, lim: int) -> int:
                 try:
                     fts_rows = conn.execute(
-                        fts_sql, (q_vec_bytes, fts_query, *allowed_statuses, max(top_k * 3, 30))
+                        fts_base_sql, (q_vec_bytes, fts_q, *allowed_statuses, lim)
                     ).fetchall()
                     for r in fts_rows:
                         d = dict(r)
-                        if d["claim_id"] not in seen_ids:
-                            seen_ids.add(d["claim_id"])
-                            rows.append(d)
+                        cid = d["claim_id"]
+                        if cid not in fts_rank_by_id:
+                            fts_rank_by_id[cid] = len(fts_rank_by_id)
+                        if cid not in rows_by_id:
+                            rows_by_id[cid] = d
+                    return len(fts_rows)
                 except sqlite3.OperationalError:
-                    pass
+                    return 0
 
-            rows.sort(key=lambda r: float(r.get("distance", 999.0)))
-            return rows[:top_k]
+            # Query each rare content term individually first so common terms never crowd out rare ones
+            for rt in list(dict.fromkeys(rare_terms))[:6]:
+                tok = f'"{rt[:6]}"*' if len(rt) >= 6 else f'"{rt}"*'
+                _run_fts(tok, 12)
+
+            for term_set in ([rare_terms] if rare_terms == terms else [rare_terms, terms]):
+                if not term_set:
+                    continue
+                fts_tokens = [f'"{t[:6]}"*' if len(t) >= 6 else f'"{t}"*' for t in dict.fromkeys(term_set[:12])]
+                _run_fts(" OR ".join(fts_tokens), fts_limit)
+                if len(fts_rank_by_id) >= top_k:
+                    break
+
+            rare_set = [t for t in dict.fromkeys(rare_terms) if t not in shard_subjects]
+            scored_rows = []
+            for cid, d in rows_by_id.items():
+                v_rank = vec_rank_by_id.get(cid, vec_k + 25)
+                f_rank = fts_rank_by_id.get(cid, fts_limit + 25)
+                rrf = (1.0 / (45.0 + v_rank)) + (1.0 / (45.0 + f_rank))
+                lex_hits = 0
+                if rare_set:
+                    obj_low = str(d.get("object_val", "")).lower()
+                    lex_hits = sum(1 for t in rare_set if t in obj_low or (len(t) >= 5 and t[:5] in obj_low))
+                    rrf += 0.008 * min(lex_hits, 4)
+                d["_rrf_score"] = rrf
+                d["_lex_hits"] = lex_hits
+                scored_rows.append(d)
+
+            scored_rows.sort(
+                key=lambda r: (
+                    float(r.get("distance", 999.0))
+                    - min(0.12, 0.02 * int(r.get("_lex_hits", 0)) + 1.8 * float(r.get("_rrf_score", 0.0))),
+                    float(r.get("distance", 999.0)),
+                )
+            )
+            return scored_rows[:top_k]
 
     def query_graph_multihop(self, namespace: str, start_subject: str, max_hops: int = 3) -> List[Dict[str, Any]]:
         """Recursive CTE graph traversal over claims_index triples."""

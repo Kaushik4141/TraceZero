@@ -150,6 +150,8 @@ def _parse_sections_from_markdown(md_text: str) -> Dict[str, Any]:
                 if not line or line.startswith("#"):
                     continue
                 clean_line = line.lstrip("-*• ").strip()
+                if clean_line in ("(None)", "No active decisions recorded."):
+                    continue
                 cite_match = re.search(r"\[\^([a-zA-Z0-9_\-]+)\]", clean_line)
                 claim_match = re.search(r"claim:\s*`?([a-zA-Z0-9_\-]+)`?", clean_line)
                 citation = f"[^{cite_match.group(1)}]" if cite_match else ""

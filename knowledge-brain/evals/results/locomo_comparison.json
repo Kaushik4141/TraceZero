@@ -4,51 +4,169 @@
   "num_qas": 199,
   "results": [
     {
-      "engine": "TraceZero",
+      "engine": "TraceZero (Strict PS-06 Budget=800)",
       "total_qas": 199,
-      "ingest_secs": 13.74,
+      "ingest_secs": 15.11,
       "ingest_items": 419,
-      "overall_token_recall_pct": 45.17,
-      "overall_best_line_f1_pct": 20.28,
-      "overall_substring_hit_pct": 13.16,
-      "cat5_abstention_pct": 65.96,
-      "mean_context_tokens": 379.4,
-      "p50_latency_ms": 105.74,
-      "p95_latency_ms": 109.32,
+      "overall_token_recall_pct": 61.08,
+      "overall_best_line_f1_pct": 25.78,
+      "overall_substring_hit_pct": 22.37,
+      "cat5_abstention_pct": 59.57,
+      "all_category_score_pct": 60.72,
+      "mean_context_tokens": 621.5,
+      "recall_per_1k_tokens": 98.3,
+      "p50_latency_ms": 192.38,
+      "p95_latency_ms": 596.98,
       "categories": {
         "1": {
           "name": "Single-Hop",
           "count": 32,
-          "token_recall_pct": 40.18,
-          "best_line_f1_pct": 14.72,
-          "substring_hit_pct": 9.38
+          "token_recall_pct": 48.19,
+          "best_line_f1_pct": 16.22,
+          "substring_hit_pct": 12.5
         },
         "2": {
           "name": "Temporal",
           "count": 37,
-          "token_recall_pct": 52.43,
-          "best_line_f1_pct": 22.86,
-          "substring_hit_pct": 5.41
+          "token_recall_pct": 65.5,
+          "best_line_f1_pct": 28.65,
+          "substring_hit_pct": 10.81
         },
         "3": {
           "name": "Multi-Hop",
           "count": 13,
-          "token_recall_pct": 11.54,
-          "best_line_f1_pct": 7.92,
+          "token_recall_pct": 20.94,
+          "best_line_f1_pct": 9.93,
           "substring_hit_pct": 0.0
         },
         "4": {
           "name": "Open-Domain",
           "count": 70,
-          "token_recall_pct": 49.86,
-          "best_line_f1_pct": 23.75,
-          "substring_hit_pct": 21.43
+          "token_recall_pct": 72.08,
+          "best_line_f1_pct": 31.57,
+          "substring_hit_pct": 37.14
         },
         "5": {
           "name": "Adversarial",
           "count": 47,
-          "abstention_rate_pct": 65.96,
-          "adversarial_leak_pct": 14.89
+          "abstention_rate_pct": 59.57,
+          "adversarial_leak_pct": 27.66
+        }
+      },
+      "deletion_audit": {
+        "pre_delete_byte_matches": 4,
+        "post_delete_byte_matches": 0,
+        "receipt_byte_scan_matches": 0,
+        "post_delete_abstained": true,
+        "byte_clean_pct": 100.0
+      }
+    },
+    {
+      "engine": "TraceZero (Mid Budget=2000, ~OpenViking)",
+      "total_qas": 199,
+      "ingest_secs": 19.93,
+      "ingest_items": 419,
+      "overall_token_recall_pct": 69.22,
+      "overall_best_line_f1_pct": 28.93,
+      "overall_substring_hit_pct": 24.34,
+      "cat5_abstention_pct": 59.57,
+      "all_category_score_pct": 66.94,
+      "mean_context_tokens": 1553.0,
+      "recall_per_1k_tokens": 44.6,
+      "p50_latency_ms": 423.2,
+      "p95_latency_ms": 834.76,
+      "categories": {
+        "1": {
+          "name": "Single-Hop",
+          "count": 32,
+          "token_recall_pct": 67.15,
+          "best_line_f1_pct": 20.26,
+          "substring_hit_pct": 15.62
+        },
+        "2": {
+          "name": "Temporal",
+          "count": 37,
+          "token_recall_pct": 68.74,
+          "best_line_f1_pct": 29.46,
+          "substring_hit_pct": 13.51
+        },
+        "3": {
+          "name": "Multi-Hop",
+          "count": 13,
+          "token_recall_pct": 30.72,
+          "best_line_f1_pct": 11.58,
+          "substring_hit_pct": 0.0
+        },
+        "4": {
+          "name": "Open-Domain",
+          "count": 70,
+          "token_recall_pct": 77.58,
+          "best_line_f1_pct": 35.84,
+          "substring_hit_pct": 38.57
+        },
+        "5": {
+          "name": "Adversarial",
+          "count": 47,
+          "abstention_rate_pct": 59.57,
+          "adversarial_leak_pct": 36.17
+        }
+      },
+      "deletion_audit": {
+        "pre_delete_byte_matches": 4,
+        "post_delete_byte_matches": 0,
+        "receipt_byte_scan_matches": 0,
+        "post_delete_abstained": true,
+        "byte_clean_pct": 100.0
+      }
+    },
+    {
+      "engine": "TraceZero (High Budget=7000, ~Mem0 Research)",
+      "total_qas": 199,
+      "ingest_secs": 11.67,
+      "ingest_items": 419,
+      "overall_token_recall_pct": 75.51,
+      "overall_best_line_f1_pct": 31.62,
+      "overall_substring_hit_pct": 27.63,
+      "cat5_abstention_pct": 59.57,
+      "all_category_score_pct": 71.75,
+      "mean_context_tokens": 5486.1,
+      "recall_per_1k_tokens": 13.8,
+      "p50_latency_ms": 864.56,
+      "p95_latency_ms": 1347.92,
+      "categories": {
+        "1": {
+          "name": "Single-Hop",
+          "count": 32,
+          "token_recall_pct": 82.71,
+          "best_line_f1_pct": 25.71,
+          "substring_hit_pct": 25.0
+        },
+        "2": {
+          "name": "Temporal",
+          "count": 37,
+          "token_recall_pct": 72.07,
+          "best_line_f1_pct": 31.16,
+          "substring_hit_pct": 18.92
+        },
+        "3": {
+          "name": "Multi-Hop",
+          "count": 13,
+          "token_recall_pct": 40.51,
+          "best_line_f1_pct": 15.82,
+          "substring_hit_pct": 0.0
+        },
+        "4": {
+          "name": "Open-Domain",
+          "count": 70,
+          "token_recall_pct": 80.54,
+          "best_line_f1_pct": 37.51,
+          "substring_hit_pct": 38.57
+        },
+        "5": {
+          "name": "Adversarial",
+          "count": 47,
+          "abstention_rate_pct": 59.57,
+          "adversarial_leak_pct": 38.3
         }
       },
       "deletion_audit": {
@@ -62,15 +180,17 @@
     {
       "engine": "OpenViking (openviking)",
       "total_qas": 199,
-      "ingest_secs": 28.0,
+      "ingest_secs": 28.83,
       "ingest_items": 19,
       "overall_token_recall_pct": 62.07,
       "overall_best_line_f1_pct": 28.85,
       "overall_substring_hit_pct": 18.42,
       "cat5_abstention_pct": 0.0,
+      "all_category_score_pct": 47.41,
       "mean_context_tokens": 1894.0,
-      "p50_latency_ms": 8.36,
-      "p95_latency_ms": 9.21,
+      "recall_per_1k_tokens": 32.8,
+      "p50_latency_ms": 8.44,
+      "p95_latency_ms": 9.17,
       "categories": {
         "1": {
           "name": "Single-Hop",
@@ -117,15 +237,17 @@
     {
       "engine": "Mem0 (mem0ai)",
       "total_qas": 199,
-      "ingest_secs": 3.73,
+      "ingest_secs": 8.64,
       "ingest_items": 419,
       "overall_token_recall_pct": 65.29,
       "overall_best_line_f1_pct": 27.95,
       "overall_substring_hit_pct": 22.37,
       "cat5_abstention_pct": 0.0,
+      "all_category_score_pct": 49.87,
       "mean_context_tokens": 940.3,
-      "p50_latency_ms": 16.83,
-      "p95_latency_ms": 18.09,
+      "recall_per_1k_tokens": 69.4,
+      "p50_latency_ms": 15.05,
+      "p95_latency_ms": 15.92,
       "categories": {
         "1": {
           "name": "Single-Hop",
